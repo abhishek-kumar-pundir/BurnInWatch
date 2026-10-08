@@ -1,0 +1,16 @@
+export const CHART = {
+  ifColor: "#1f5f8b",
+  aeColor: "#7a4fa3",
+  grid: "#e3e8ee",
+  axis: "#7b8794",
+  baseline: "#1f5f8b",
+  review: "#b97a00",
+  anomaly: "#b4261f",
+  signal: "#17202b",
+  both: "#b4261f",
+  ifOnly: "#1f5f8b",
+  aeOnly: "#7a4fa3",
+  neither: "#9aa5b1",
+  positive: "#b4261f",
+  negative: "#1f5f8b",
+} as const;

@@ -1,0 +1,16 @@
+# Runtime. The .joblib artifacts were pickled with scikit-learn 1.9.0 (verified from the load warning).
+# Keep the 1.9.x line so the Isolation Forest / RobustScaler / SimpleImputer unpickle identically.
+fastapi>=0.110
+uvicorn[standard]>=0.27
+python-multipart>=0.0.9
+pydantic>=2.6
+pydantic-settings>=2.2
+numpy>=1.26
+pandas>=2.1
+scikit-learn>=1.9,<1.10
+joblib>=1.3
+torch>=2.2
+
+# Development / tests
+pytest>=8
+httpx>=0.27

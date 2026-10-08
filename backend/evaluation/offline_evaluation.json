@@ -1,0 +1,269 @@
+{
+  "title": "Offline Model Evaluation",
+  "generated_from": [
+    "processed/burninwatch_expanded_model_comparison_v2.csv",
+    "processed/burninwatch_expanded_overlapping_windows_v2.csv",
+    "backend/models/* (thresholds and artifacts)",
+    "12_BurnInWatch_Expanded_Modeling.ipynb (methodology)"
+  ],
+  "validation_methodology": "Per file, raw records are split chronologically (no shuffling, split BEFORE windowing so windows never straddle splits): first 20 % baseline_train (fits imputer, RobustScaler, Isolation Forest, Autoencoder), next 20 % validation (sets thresholds), last 60 % evaluation. 'check' files are held out entirely. Windows: 100 records, stride 25.",
+  "threshold_method": "Each detector's threshold = 95th percentile of its validation-window scores, so ~5 % of validation windows are flagged by construction.",
+  "models": [
+    {
+      "model": "response_focused",
+      "feature_set": "response_focused",
+      "feature_count": 20,
+      "threshold_if": 0.06908179599444629,
+      "threshold_ae": 0.2876077890396118,
+      "train_windows": 522,
+      "validation_windows": 522,
+      "evaluation_windows": 1617,
+      "if_flag_fraction": 0.1057513914656771,
+      "ae_flag_fraction": 0.1193568336425479,
+      "both_flagged": 124,
+      "if_only": 47,
+      "ae_only": 69,
+      "score_correlation": 0.5815339122368411,
+      "ae_final_training_loss": 0.0484214025581705,
+      "per_device": [
+        {
+          "device_id": "Device_2",
+          "file": "Device2  1.mat",
+          "role": "main",
+          "evaluation_windows": 260,
+          "if_flag_fraction": 0.13076923076923078,
+          "ae_flag_fraction": 0.17307692307692307,
+          "both_flagged": 32
+        },
+        {
+          "device_id": "Device_2",
+          "file": "Device2b  1.mat",
+          "role": "b",
+          "evaluation_windows": 151,
+          "if_flag_fraction": 0.006622516556291391,
+          "ae_flag_fraction": 0.033112582781456956,
+          "both_flagged": 1
+        },
+        {
+          "device_id": "Device_3",
+          "file": "Device3  1.mat",
+          "role": "main",
+          "evaluation_windows": 233,
+          "if_flag_fraction": 0.12446351931330472,
+          "ae_flag_fraction": 0.24034334763948498,
+          "both_flagged": 21
+        },
+        {
+          "device_id": "Device_3",
+          "file": "Device3b  1.mat",
+          "role": "b",
+          "evaluation_windows": 122,
+          "if_flag_fraction": 0.00819672131147541,
+          "ae_flag_fraction": 0.03278688524590164,
+          "both_flagged": 1
+        },
+        {
+          "device_id": "Device_4",
+          "file": "Device4  1.mat",
+          "role": "main",
+          "evaluation_windows": 255,
+          "if_flag_fraction": 0.10588235294117647,
+          "ae_flag_fraction": 0.09019607843137255,
+          "both_flagged": 19
+        },
+        {
+          "device_id": "Device_4",
+          "file": "Device4b  1.mat",
+          "role": "b",
+          "evaluation_windows": 347,
+          "if_flag_fraction": 0.06340057636887608,
+          "ae_flag_fraction": 0.043227665706051875,
+          "both_flagged": 8
+        },
+        {
+          "device_id": "Device_5",
+          "file": "Device5  1.mat",
+          "role": "main",
+          "evaluation_windows": 249,
+          "if_flag_fraction": 0.2289156626506024,
+          "ae_flag_fraction": 0.18072289156626506,
+          "both_flagged": 42
+        }
+      ]
+    },
+    {
+      "model": "expanded",
+      "feature_set": "expanded",
+      "feature_count": 31,
+      "threshold_if": 0.10458415425735054,
+      "threshold_ae": 0.36070457100868225,
+      "train_windows": 522,
+      "validation_windows": 522,
+      "evaluation_windows": 1617,
+      "if_flag_fraction": 0.1076066790352504,
+      "ae_flag_fraction": 0.0859616573902288,
+      "both_flagged": 89,
+      "if_only": 85,
+      "ae_only": 50,
+      "score_correlation": 0.3768101655961209,
+      "ae_final_training_loss": 0.0538981341724765,
+      "per_device": [
+        {
+          "device_id": "Device_2",
+          "file": "Device2  1.mat",
+          "role": "main",
+          "evaluation_windows": 260,
+          "if_flag_fraction": 0.13846153846153847,
+          "ae_flag_fraction": 0.11923076923076924,
+          "both_flagged": 26
+        },
+        {
+          "device_id": "Device_2",
+          "file": "Device2b  1.mat",
+          "role": "b",
+          "evaluation_windows": 151,
+          "if_flag_fraction": 0.033112582781456956,
+          "ae_flag_fraction": 0.059602649006622516,
+          "both_flagged": 2
+        },
+        {
+          "device_id": "Device_3",
+          "file": "Device3  1.mat",
+          "role": "main",
+          "evaluation_windows": 233,
+          "if_flag_fraction": 0.0944206008583691,
+          "ae_flag_fraction": 0.07725321888412018,
+          "both_flagged": 10
+        },
+        {
+          "device_id": "Device_3",
+          "file": "Device3b  1.mat",
+          "role": "b",
+          "evaluation_windows": 122,
+          "if_flag_fraction": 0.02459016393442623,
+          "ae_flag_fraction": 0.08196721311475409,
+          "both_flagged": 2
+        },
+        {
+          "device_id": "Device_4",
+          "file": "Device4  1.mat",
+          "role": "main",
+          "evaluation_windows": 255,
+          "if_flag_fraction": 0.11764705882352941,
+          "ae_flag_fraction": 0.08235294117647059,
+          "both_flagged": 17
+        },
+        {
+          "device_id": "Device_4",
+          "file": "Device4b  1.mat",
+          "role": "b",
+          "evaluation_windows": 347,
+          "if_flag_fraction": 0.08069164265129683,
+          "ae_flag_fraction": 0.0345821325648415,
+          "both_flagged": 2
+        },
+        {
+          "device_id": "Device_5",
+          "file": "Device5  1.mat",
+          "role": "main",
+          "evaluation_windows": 249,
+          "if_flag_fraction": 0.20080321285140562,
+          "ae_flag_fraction": 0.15261044176706828,
+          "both_flagged": 30
+        }
+      ]
+    }
+  ],
+  "available_metrics": [
+    "feature set and count",
+    "thresholds",
+    "train/validation/evaluation window counts",
+    "evaluation flag fractions (IF, AE)",
+    "IF/AE agreement counts",
+    "IF-AE score correlation",
+    "AE final training loss",
+    "per-device / per-file evaluation flag rates"
+  ],
+  "unavailable_metrics": {
+    "precision": "No ground-truth failure/anomaly labels exist in the provided artifacts; the models are unsupervised.",
+    "recall": "Requires labelled anomalies (not available).",
+    "F1": "Requires labelled anomalies (not available).",
+    "specificity": "Requires labelled anomalies (not available).",
+    "false_positive_rate": "Requires labels. Only the validation flag rate (5 % by construction) and evaluation flag fractions exist.",
+    "ROC-AUC": "Requires labelled anomalies (not available).",
+    "PR-AUC": "Requires labelled anomalies (not available)."
+  },
+  "dataset": {
+    "independent_devices": 4,
+    "devices": [
+      "Device_2",
+      "Device_3",
+      "Device_4",
+      "Device_5"
+    ],
+    "files": [
+      {
+        "device_id": "Device_2",
+        "file": "Device2  1.mat",
+        "role": "main",
+        "windows": 428
+      },
+      {
+        "device_id": "Device_2",
+        "file": "Device2b  1.mat",
+        "role": "b",
+        "windows": 247
+      },
+      {
+        "device_id": "Device_3",
+        "file": "Device3  1.mat",
+        "role": "main",
+        "windows": 383
+      },
+      {
+        "device_id": "Device_3",
+        "file": "Device3b  1.mat",
+        "role": "b",
+        "windows": 198
+      },
+      {
+        "device_id": "Device_4",
+        "file": "Device4  1.mat",
+        "role": "main",
+        "windows": 421
+      },
+      {
+        "device_id": "Device_4",
+        "file": "Device4b  1.mat",
+        "role": "b",
+        "windows": 573
+      },
+      {
+        "device_id": "Device_5",
+        "file": "Device5  1.mat",
+        "role": "main",
+        "windows": 411
+      }
+    ],
+    "total_windows": 2661
+  },
+  "limitations": [
+    "The current dataset is sufficient for demonstrating the pipeline but is limited for establishing cross-device generalization.",
+    "Only 4 independent devices are present; overlapping windows from one test are highly correlated and are not independent samples.",
+    "Models are trained on the first 20 % of each test and evaluated on later portions of the SAME devices - there is no held-out device.",
+    "No failure labels: flag rates describe deviation from learned early-life behaviour, not detection accuracy.",
+    "Thresholds are validation 95th percentiles; a flagged window is a screening signal, not a failure prediction."
+  ],
+  "artifact_rescoring_check": {
+    "response_focused": {
+      "max_abs_if_score_diff": 1.5352302762394743e-16,
+      "max_abs_ae_score_diff": 1.8038033910983131e-06,
+      "windows_rescored": 2139
+    },
+    "expanded": {
+      "max_abs_if_score_diff": 1.1102230246251565e-16,
+      "max_abs_ae_score_diff": 4.427795338202145e-05,
+      "windows_rescored": 2139
+    }
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "all_32": {
+    "features": [
+      "supplyVoltage_mean",
+      "supplyVoltage_std",
+      "node2Voltage_mean",
+      "node2Voltage_std",
+      "node2Voltage_iqr",
+      "node2Voltage_slope",
+      "collectorEmitterCurrent_mean",
+      "collectorEmitterCurrent_std",
+      "collectorEmitterCurrent_q05",
+      "collectorEmitterCurrent_q95",
+      "collectorEmitterCurrent_iqr",
+      "collectorEmitterCurrent_slope",
+      "packageTemperature_mean",
+      "packageTemperature_std",
+      "packageTemperature_q05",
+      "packageTemperature_q95",
+      "packageTemperature_iqr",
+      "packageTemperature_slope",
+      "supply_node1_mean_diff",
+      "node1_node2_mean_diff",
+      "estimated_power_proxy",
+      "node2Voltage_delta_from_baseline",
+      "node2Voltage_pct_change_from_baseline",
+      "collectorEmitterCurrent_delta_from_baseline",
+      "collectorEmitterCurrent_pct_change_from_baseline",
+      "packageTemperature_delta_from_baseline",
+      "packageTemperature_pct_change_from_baseline",
+      "current_residual",
+      "current_residual_abs",
+      "package_temperature_residual",
+      "current_per_node2V",
+      "node_voltage_drop"
+    ],
+    "threshold_95_validation": 0.10261276563447194,
+    "model_path": "models\\burninwatch_all_32_isolation_forest.joblib"
+  },
+  "stress_aware": {
+    "features": [
+      "node2Voltage_std",
+      "node2Voltage_iqr",
+      "node2Voltage_slope",
+      "collectorEmitterCurrent_mean",
+      "collectorEmitterCurrent_std",
+      "collectorEmitterCurrent_q05",
+      "collectorEmitterCurrent_q95",
+      "collectorEmitterCurrent_iqr",
+      "collectorEmitterCurrent_slope",
+      "packageTemperature_std",
+      "packageTemperature_iqr",
+      "collectorEmitterCurrent_delta_from_baseline",
+      "collectorEmitterCurrent_pct_change_from_baseline",
+      "current_residual",
+      "current_residual_abs",
+      "current_per_node2V",
+      "node_voltage_drop"
+    ],
+    "threshold_95_validation": 0.043463085965985825,
+    "model_path": "models\\burninwatch_stress_aware_isolation_forest.joblib"
+  },
+  "compact_response": {
+    "features": [
+      "collectorEmitterCurrent_mean",
+      "collectorEmitterCurrent_std",
+      "collectorEmitterCurrent_iqr",
+      "collectorEmitterCurrent_slope",
+      "collectorEmitterCurrent_delta_from_baseline",
+      "collectorEmitterCurrent_pct_change_from_baseline",
+      "current_residual",
+      "current_residual_abs",
+      "current_per_node2V",
+      "node_voltage_drop",
+      "node2Voltage_std",
+      "node2Voltage_iqr",
+      "packageTemperature_std",
+      "packageTemperature_iqr"
+    ],
+    "threshold_95_validation": 0.05221544167253605,
+    "model_path": "models\\burninwatch_compact_response_isolation_forest.joblib"
+  }
+}

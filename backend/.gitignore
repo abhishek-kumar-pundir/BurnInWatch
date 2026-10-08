@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.pytest_cache/
+*.egg-info/
+# trained artifacts are usually kept out of git; remove these lines to commit them
+models/*.joblib
+models/*.pt

@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "burninwatch"
+version = "0.1.0"
+description = "BurnInWatch inference backend - unsupervised anomaly screening for burn-in tests"
+requires-python = ">=3.10"
+dependencies = [
+  "fastapi>=0.110",
+  "uvicorn[standard]>=0.27",
+  "python-multipart>=0.0.9",
+  "pydantic>=2.6",
+  "pydantic-settings>=2.2",
+  "numpy>=1.26",
+  "pandas>=2.1",
+  "scikit-learn>=1.9,<1.10",   # artifacts were pickled with 1.9.0
+  "joblib>=1.3",
+  "torch>=2.2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "httpx>=0.27"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "tests"]
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning"]

@@ -1,0 +1,30 @@
+# environments / local config
+.venv/
+node_modules/
+dist/
+.env
+*.local
+
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+.ipynb_checkpoints/
+
+# raw data and large research outputs (not for GitHub)
+/dataset/                       # <- replace with your actual dataset folder name
+*.mat
+/processed/*
+!/processed/sample_burnin_device4_main.csv
+!/processed/burninwatch_expanded_overlapping_windows_v2.csv
+!/processed/burninwatch_expanded_model_comparison_v2.csv
+/mat_nested_structure.csv
+/candidate_signal_map.csv
+/mat_variable_inventory.csv
+/dataset_file_inventory.csv
+/smu_csv_schema_sample.csv
+
+# old research model files (the app uses backend/models)
+/models/*.pt
+/models/*.joblib
