@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useMatch } from "react-router-dom";
-import { Activity, FilePlus2, FlaskConical, History, LayoutDashboard, Menu, Server, X } from "lucide-react";
+import { Activity, Box, FilePlus2, FlaskConical, History, LayoutDashboard, Menu, Server, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { StatusPill } from "../components/StatusPill";
 import { cn } from "../utils/cn";
@@ -18,11 +18,13 @@ function useNav(): NavDef[] {
   const isOverview = useMatch({ path: "/", end: true });
   const isSystem = useMatch("/system");
   const isPerf = useMatch("/performance");
+  const isDigitalTwin = useMatch("/digital-twin");
   return [
     { to: "/", label: "Overview", Icon: LayoutDashboard, active: !!isOverview },
     { to: "/screenings/new", label: "Live Screening", Icon: FilePlus2, active: !!isNew },
     { to: "/screenings", label: "Screening History", Icon: History, active: !!isScreenings && !isNew },
     { to: "/performance", label: "Model Performance", Icon: FlaskConical, active: !!isPerf },
+    { to: "/digital-twin", label: "3D Digital Twin", Icon: Box, active: !!isDigitalTwin },
     { to: "/system", label: "System", Icon: Server, active: !!isSystem },
   ];
 }
@@ -33,6 +35,7 @@ function pageTitle(path: string): string {
   if (path === "/performance") return "Model performance";
   if (path === "/screenings") return "Screening history";
   if (path.startsWith("/screenings/")) return "Live screening result";
+  if (path === "/digital-twin") return "3D Digital Twin";
   if (path === "/system") return "System";
   return "Not found";
 }

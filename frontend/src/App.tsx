@@ -10,15 +10,24 @@ import NotFoundPage from "./pages/NotFoundPage";
 import OverviewPage from "./pages/OverviewPage";
 import SystemPage from "./pages/SystemPage";
 
-// Charts are the heaviest dependency; load the result view on demand.
+// Charts and 3D scenes are heavier dependencies; load on demand.
 const ScreeningResultPage = lazy(() => import("./pages/ScreeningResultPage"));
 const ModelPerformancePage = lazy(() => import("./pages/ModelPerformancePage"));
+const DigitalTwinPage = lazy(() => import("./digitalTwin/DigitalTwinPage"));
 
 export default function App() {
   return (
     <ErrorBoundary>
       <BackendStatusProvider>
         <Routes>
+          <Route
+            path="digital-twin"
+            element={
+              <Suspense fallback={<LoadingState label="Initializing 3D Digital Twin…" height={400} />}>
+                <DigitalTwinPage />
+              </Suspense>
+            }
+          />
           <Route element={<AppShell />}>
             <Route index element={<OverviewPage />} />
             <Route path="screenings/new" element={<NewScreeningPage />} />
