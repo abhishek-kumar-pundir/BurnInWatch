@@ -1,6 +1,7 @@
 import React from 'react';
 import { ModelTelemetry } from '../demoData';
 import { THEME } from '../theme';
+import { MODEL_THRESHOLDS } from '../data/datasetStats';
 
 interface GaugeRingsProps {
   telemetry: ModelTelemetry;
@@ -15,13 +16,20 @@ export const GaugeRings: React.FC<GaugeRingsProps> = ({ telemetry, visible }) =>
   const radius = 30;
   const circ = 2 * Math.PI * radius;
 
-  // IF: 0.0 to 0.8 mapped to arc
-  const ifPct = Math.min(Math.max(ifScore / 0.8, 0), 1);
+  // Real observed scales (IF max ~0.175, AE max ~4.23)
+  const ifMax = MODEL_THRESHOLDS.response_focused.maxObservedIF; // 0.175
+  const aeMax = MODEL_THRESHOLDS.response_focused.maxObservedAE; // 4.23
+
+  const ifPct = Math.min(Math.max(ifScore / ifMax, 0), 1);
   const ifOffset = circ * (1 - ifPct);
 
-  // AE: 0.0 to 0.35 mapped to arc
-  const aePct = Math.min(Math.max(aeLoss / 0.35, 0), 1);
+  // For AE, map power-scaled (or linear) so nominal range remains clearly legible
+  const aePct = Math.min(Math.max(aeLoss / aeMax, 0), 1);
   const aeOffset = circ * (1 - aePct);
+
+  // Position of threshold ticks along circumference
+  const ifThreshPct = Math.min(Math.max(ifThreshold / ifMax, 0), 1);
+  const aeThreshPct = Math.min(Math.max(aeThreshold / aeMax, 0), 1);
 
   return (
     <div className="grid grid-cols-2 gap-2.5 w-full pointer-events-auto">
@@ -47,15 +55,26 @@ export const GaugeRings: React.FC<GaugeRingsProps> = ({ telemetry, visible }) =>
               strokeWidth="6"
               fill="none"
             />
-            {/* Dashed Threshold Indicator */}
+            {/* Threshold marker ring arc */}
             <circle
               cx="40"
               cy="40"
               r={radius}
-              stroke="#94a3b8"
+              stroke="#cbd5e1"
               strokeWidth="6"
-              strokeDasharray="3 4"
               fill="none"
+              strokeDasharray={`${circ * ifThreshPct} ${circ * (1 - ifThreshPct)}`}
+            />
+            {/* Threshold Notch */}
+            <circle
+              cx="40"
+              cy="40"
+              r={radius}
+              stroke="#64748b"
+              strokeWidth="7"
+              fill="none"
+              strokeDasharray={`2 ${circ - 2}`}
+              strokeDashoffset={-circ * ifThreshPct}
             />
             {/* Active score ring */}
             <circle
@@ -75,15 +94,15 @@ export const GaugeRings: React.FC<GaugeRingsProps> = ({ telemetry, visible }) =>
           {/* Center value */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span
-              className="text-base font-semibold tabular-nums text-slate-900"
+              className="text-sm font-semibold tabular-nums text-slate-900"
               style={{
                 color: ifFlagged ? THEME.status.review.solid : THEME.ui.ink,
               }}
             >
-              {ifScore.toFixed(2)}
+              {ifScore.toFixed(3)}
             </span>
-            <span className="text-[10px] tabular-nums text-slate-500">
-              limit {ifThreshold.toFixed(2)}
+            <span className="text-[9px] tabular-nums text-slate-500">
+              limit {ifThreshold.toFixed(3)}
             </span>
           </div>
         </div>
@@ -122,15 +141,26 @@ export const GaugeRings: React.FC<GaugeRingsProps> = ({ telemetry, visible }) =>
               strokeWidth="6"
               fill="none"
             />
-            {/* Dashed Threshold Indicator */}
+            {/* Threshold marker ring arc */}
             <circle
               cx="40"
               cy="40"
               r={radius}
-              stroke="#94a3b8"
+              stroke="#cbd5e1"
               strokeWidth="6"
-              strokeDasharray="3 4"
               fill="none"
+              strokeDasharray={`${circ * aeThreshPct} ${circ * (1 - aeThreshPct)}`}
+            />
+            {/* Threshold Notch */}
+            <circle
+              cx="40"
+              cy="40"
+              r={radius}
+              stroke="#64748b"
+              strokeWidth="7"
+              fill="none"
+              strokeDasharray={`2 ${circ - 2}`}
+              strokeDashoffset={-circ * aeThreshPct}
             />
             {/* Active score ring */}
             <circle
@@ -150,15 +180,15 @@ export const GaugeRings: React.FC<GaugeRingsProps> = ({ telemetry, visible }) =>
           {/* Center value */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span
-              className="text-base font-semibold tabular-nums text-slate-900"
+              className="text-sm font-semibold tabular-nums text-slate-900"
               style={{
                 color: aeFlagged ? THEME.status.anomaly.solid : THEME.ui.ink,
               }}
             >
               {aeLoss.toFixed(3)}
             </span>
-            <span className="text-[10px] tabular-nums text-slate-500">
-              limit {aeThreshold.toFixed(2)}
+            <span className="text-[9px] tabular-nums text-slate-500">
+              limit {aeThreshold.toFixed(3)}
             </span>
           </div>
         </div>
@@ -171,7 +201,7 @@ export const GaugeRings: React.FC<GaugeRingsProps> = ({ telemetry, visible }) =>
             borderColor: aeFlagged ? THEME.status.anomaly.border : THEME.ui.border,
           }}
         >
-          {aeFlagged ? 'High error' : 'Normal'}
+          {aeFlagged ? 'Flagged' : 'Normal'}
         </span>
       </div>
     </div>

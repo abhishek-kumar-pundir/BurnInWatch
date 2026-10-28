@@ -4,7 +4,7 @@
     "processed/burninwatch_expanded_model_comparison_v2.csv",
     "processed/burninwatch_expanded_overlapping_windows_v2.csv",
     "backend/models/* (thresholds and artifacts)",
-    "12_BurnInWatch_Expanded_Modeling.ipynb (methodology)"
+    "05_expanded_overlapping_modeling.ipynb (methodology)"
   ],
   "validation_methodology": "Per file, raw records are split chronologically (no shuffling, split BEFORE windowing so windows never straddle splits): first 20 % baseline_train (fits imputer, RobustScaler, Isolation Forest, Autoencoder), next 20 % validation (sets thresholds), last 60 % evaluation. 'check' files are held out entirely. Windows: 100 records, stride 25.",
   "threshold_method": "Each detector's threshold = 95th percentile of its validation-window scores, so ~5 % of validation windows are flagged by construction.",

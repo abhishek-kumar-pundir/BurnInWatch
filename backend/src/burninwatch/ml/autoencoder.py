@@ -1,6 +1,6 @@
 """PyTorch autoencoder used for INFERENCE only.
 
-The architecture is the exact ``BurnInAutoencoder`` from notebook 12::
+The architecture is the exact ``BurnInAutoencoder`` from notebook 05 (formerly 12)::
 
     encoder = Linear(d, h) -> ReLU -> Linear(h, b)        # NO activation on the bottleneck
     decoder = Linear(b, h) -> ReLU -> Linear(h, d)        # linear output

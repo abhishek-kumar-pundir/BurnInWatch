@@ -1,11 +1,19 @@
 /**
  * BurnInWatch 3D Digital Twin — Scripted Demonstration Data & Scenarios
  * 
- * HONESTY RULE:
- * This is an illustrative simulation for presentation and demonstration purposes.
- * Values are scripted to depict canonical degradation scenarios of an IGBT module
- * during accelerated burn-in testing.
+ * Single source of truth: src/digitalTwin/data/datasetStats.ts
+ * Sourced from processed/eda_robust_statistics.csv & sample_burnin_device4_main.csv
+ * 
+ * Rules:
+ * - Voltages in V, collectorEmitterCurrent in A (~0.04-0.20 A).
+ * - packageTemperature: "dataset units" (values 26-281 in the dataset).
+ * - internalTemperature and heatSinkTemperature: "raw sensor units (uncalibrated)".
+ *   Never show them as °C; they are not used by the models.
+ * - Gauge rings use the real thresholds (tau_IF = 0.069082, tau_AE = 0.287608).
+ * - No hardcoded 55 A / 40 A / 88.5 / 148.7 / 165 anywhere.
  */
+
+import { DATASET_STATS, MODEL_THRESHOLDS } from './data/datasetStats';
 
 export interface SensorValues {
   supplyVoltage: number;          // V
@@ -13,9 +21,9 @@ export interface SensorValues {
   node2Voltage: number;           // V
   node_voltage_drop: number;      // V (node1 - node2)
   collectorEmitterCurrent: number;// A
-  internalTemperature: number;    // °C (die/junction)
-  packageTemperature: number;     // °C (casing)
-  heatSinkTemperature: number;    // °C (cold plate / fins)
+  internalTemperature: number;    // raw sensor units (uncalibrated)
+  packageTemperature: number;     // dataset units
+  heatSinkTemperature: number;    // raw sensor units (uncalibrated)
 }
 
 export interface ModelTelemetry {
@@ -75,16 +83,16 @@ export const PART_CATALOG: Record<string, PartInfo> = {
     id: 'die_igbt',
     name: 'Silicon IGBT Switching Die',
     role: 'Primary high-voltage semiconductor switch conducting main collector-emitter current.',
-    relatedSensor: 'internalTemperature',
-    sensorLabel: 'internalTemperature',
-    failureMode: 'Localized junction runaway, gate oxide breakdown, latch-up.',
+    relatedSensor: 'packageTemperature',
+    sensorLabel: 'packageTemperature (dataset units)',
+    failureMode: 'Die localized overheating, gate oxide breakdown, latch-up.',
   },
   die_diode: {
     id: 'die_diode',
     name: 'Freewheeling Diode (FWD) Die',
     role: 'Protects switching die by providing safe inductive recirculation during switch-off.',
-    relatedSensor: 'internalTemperature',
-    sensorLabel: 'internalTemperature',
+    relatedSensor: 'packageTemperature',
+    sensorLabel: 'packageTemperature (dataset units)',
     failureMode: 'Reverse recovery stress, forward voltage drop drift.',
   },
   bond_wire_0: {
@@ -92,7 +100,7 @@ export const PART_CATALOG: Record<string, PartInfo> = {
     name: 'Gate Bond Wire (Wire 1)',
     role: 'Transmits gate switching pulse from control terminal to the IGBT gate contact pad.',
     relatedSensor: 'node1Voltage',
-    sensorLabel: 'node1Voltage',
+    sensorLabel: 'node1Voltage (V)',
     failureMode: 'Gate wire heel cracking, parasitic oscillation.',
   },
   bond_wire_1: {
@@ -100,7 +108,7 @@ export const PART_CATALOG: Record<string, PartInfo> = {
     name: 'Main Emitter Bond Wire A (Wire 2)',
     role: 'High-current interconnect carrying primary power from terminal to silicon die.',
     relatedSensor: 'collectorEmitterCurrent',
-    sensorLabel: 'collectorEmitterCurrent',
+    sensorLabel: 'collectorEmitterCurrent (A)',
     failureMode: 'Electromigration, thermal cycling fatigue.',
   },
   bond_wire_2: {
@@ -108,7 +116,7 @@ export const PART_CATALOG: Record<string, PartInfo> = {
     name: 'Main Emitter Bond Wire B (Wire 3 — Fault Susceptible)',
     role: 'High-current interconnect subject to repetitive CTE thermal expansion mismatch.',
     relatedSensor: 'collectorEmitterCurrent',
-    sensorLabel: 'collectorEmitterCurrent',
+    sensorLabel: 'collectorEmitterCurrent (A)',
     failureMode: 'Thermal fatigue heel-cracking, bond wire lift-off.',
   },
   bond_wire_3: {
@@ -116,7 +124,7 @@ export const PART_CATALOG: Record<string, PartInfo> = {
     name: 'Main Emitter Bond Wire C (Wire 4)',
     role: 'Parallel current share path to maintain uniform current density across the die.',
     relatedSensor: 'collectorEmitterCurrent',
-    sensorLabel: 'collectorEmitterCurrent',
+    sensorLabel: 'collectorEmitterCurrent (A)',
     failureMode: 'Current crowding overload following adjacent wire failure.',
   },
   bond_wire_4: {
@@ -124,7 +132,7 @@ export const PART_CATALOG: Record<string, PartInfo> = {
     name: 'Diode Anode Bond Wire (Wire 5)',
     role: 'Interconnect routing inductive discharge current into the freewheeling diode.',
     relatedSensor: 'node2Voltage',
-    sensorLabel: 'node2Voltage',
+    sensorLabel: 'node2Voltage (V)',
     failureMode: 'Thermal cycling stress, bond lift.',
   },
   dbc_substrate: {
@@ -132,7 +140,7 @@ export const PART_CATALOG: Record<string, PartInfo> = {
     name: 'Direct Bonded Copper (DBC) Ceramic Substrate',
     role: 'Provides electrical isolation between high-voltage silicon and baseplate while conducting heat.',
     relatedSensor: 'packageTemperature',
-    sensorLabel: 'packageTemperature',
+    sensorLabel: 'packageTemperature (dataset units)',
     failureMode: 'Solder voiding, ceramic substrate cracking, copper delamination.',
   },
   baseplate: {
@@ -140,23 +148,23 @@ export const PART_CATALOG: Record<string, PartInfo> = {
     name: 'Heavy Copper Baseplate',
     role: 'Mechanical structural foundation spreading heat horizontally from the DBC substrate.',
     relatedSensor: 'packageTemperature',
-    sensorLabel: 'packageTemperature',
+    sensorLabel: 'packageTemperature (dataset units)',
     failureMode: 'Baseplate warpage, thermal interface degradation.',
   },
   heatsink: {
     id: 'heatsink',
     name: 'Aluminum Cold Plate & Dissipation Fins',
-    role: 'Dissipates multi-kilowatt thermal loads into the forced-air or liquid coolant stream.',
+    role: 'Dissipates thermal loads into the forced-air or liquid coolant stream.',
     relatedSensor: 'heatSinkTemperature',
-    sensorLabel: 'heatSinkTemperature',
-    failureMode: 'Finned channel blockage, thermal paste pump-out / dry-out.',
+    sensorLabel: 'heatSinkTemperature (raw sensor units, uncalibrated)',
+    failureMode: 'Finned channel blockage, thermal interface dry-out.',
   },
   casing: {
     id: 'casing',
     name: 'Protective Molded Epoxy Housing',
     role: 'Hermetically encapsulates silicon components and silicone gel against moisture and debris.',
     relatedSensor: 'packageTemperature',
-    sensorLabel: 'packageTemperature',
+    sensorLabel: 'packageTemperature (dataset units)',
     failureMode: 'High-temperature plastic embrittlement, seal rupture.',
   },
   terminals: {
@@ -164,13 +172,13 @@ export const PART_CATALOG: Record<string, PartInfo> = {
     name: 'Screw & Kelvin Power Terminals',
     role: 'External electrical interface for DC bus voltage and gate drive instrumentation.',
     relatedSensor: 'nodeVoltages',
-    sensorLabel: 'node1Voltage / node2Voltage',
+    sensorLabel: 'node1Voltage / node2Voltage (V)',
     failureMode: 'Contact fretting corrosion, screw torque relaxation.',
   },
   clamps: {
     id: 'clamps',
     name: 'Pneumatic Fixture Clamps',
-    role: 'Applies calibrated mechanical pressure to guarantee uniform thermal interface resistance.',
+    role: 'Applies calibrated mechanical pressure to guarantee uniform thermal contact.',
     relatedSensor: 'none',
     sensorLabel: 'Test Fixture Pressure',
     failureMode: 'Pneumatic cylinder pressure loss, uneven clamping.',
@@ -180,7 +188,7 @@ export const PART_CATALOG: Record<string, PartInfo> = {
     name: 'Overhead Kelvin Contact Probes',
     role: 'Four-point electrical Kelvin sensing to measure microvolt drops without lead resistance.',
     relatedSensor: 'nodeVoltages',
-    sensorLabel: 'node1Voltage / node2Voltage',
+    sensorLabel: 'node1Voltage / node2Voltage (V)',
     failureMode: 'Probe tip oxidation, mechanical spring fatigue.',
   },
 };
@@ -189,15 +197,15 @@ export const DEMO_DATA = {
   disclaimer: "Illustrative simulation — values are scripted for demonstration",
   manualHonestyLabel: "Illustrative scoring — not the trained models (single-point slider inputs do not constitute a 100-sample temporal window with 20 engineered features)",
 
-  // Baseline distribution parameters from real NASA aging dataset (sample_burnin_device4_main.csv p01-p99)
+  // Baseline distribution parameters from real NASA aging dataset (processed/eda_robust_statistics.csv)
   baselineStats: {
-    supplyVoltage: { mean: 4.49, std: 0.99, min: 2.45, max: 5.43, unit: 'V' },
-    node1Voltage: { mean: 4.49, std: 0.99, min: 2.45, max: 5.43, unit: 'V' },
-    node2Voltage: { mean: 4.16, std: 1.01, min: 1.94, max: 5.43, unit: 'V' },
-    collectorEmitterCurrent: { mean: 0.106, std: 0.040, min: 0.04, max: 0.20, unit: 'A' },
-    internalTemperature: { mean: 45.0, std: 15.0, min: 25.0, max: 175.0, unit: '°C' },
-    packageTemperature: { mean: 214.3, std: 60.9, min: 37.0, max: 266.0, unit: '°C' },
-    heatSinkTemperature: { mean: 50.0, std: 12.0, min: 25.0, max: 120.0, unit: '°C' },
+    supplyVoltage: { mean: 4.707, std: 1.090, min: DATASET_STATS.supplyVoltage.p01, max: DATASET_STATS.supplyVoltage.p99, unit: 'V' },
+    node1Voltage: { mean: 4.705, std: 1.090, min: DATASET_STATS.node1Voltage.p01, max: DATASET_STATS.node1Voltage.p99, unit: 'V' },
+    node2Voltage: { mean: 4.374, std: 1.104, min: DATASET_STATS.node2Voltage.p01, max: DATASET_STATS.node2Voltage.p99, unit: 'V' },
+    collectorEmitterCurrent: { mean: 0.106, std: 0.038, min: DATASET_STATS.collectorEmitterCurrent.p01, max: DATASET_STATS.collectorEmitterCurrent.p99, unit: 'A' },
+    internalTemperature: { mean: -2260.58, std: 1.98, min: DATASET_STATS.internalTemperature.p01, max: DATASET_STATS.internalTemperature.p99, unit: 'raw sensor units (uncalibrated)' },
+    packageTemperature: { mean: 220.00, std: 63.96, min: DATASET_STATS.packageTemperature.p01, max: DATASET_STATS.packageTemperature.p99, unit: 'dataset units' },
+    heatSinkTemperature: { mean: 719.13, std: 0.10, min: DATASET_STATS.heatSinkTemperature.p01, max: DATASET_STATS.heatSinkTemperature.p99, unit: 'raw sensor units (uncalibrated)' },
   },
 
   // Manual Mode Presets based on real dataset statistics
@@ -205,13 +213,13 @@ export const DEMO_DATA = {
     normal: {
       name: 'Normal Operation',
       values: {
-        supplyVoltage: 4.5,
-        node1Voltage: 4.5,
-        node2Voltage: 4.2,
-        collectorEmitterCurrent: 0.10,
-        internalTemperature: 45.0,
-        packageTemperature: 75.0,
-        heatSinkTemperature: 32.0,
+        supplyVoltage: 4.94,
+        node1Voltage: 4.94,
+        node2Voltage: 4.51,
+        collectorEmitterCurrent: 0.092,
+        internalTemperature: -2261.5,
+        packageTemperature: 254.4,
+        heatSinkTemperature: 719.2,
       },
       faultWireIndex: -1,
       solderDelamination: false,
@@ -219,27 +227,27 @@ export const DEMO_DATA = {
     overstress: {
       name: 'Current Overstress',
       values: {
-        supplyVoltage: 5.4,
-        node1Voltage: 5.3,
-        node2Voltage: 3.2,
-        collectorEmitterCurrent: 0.20,
-        internalTemperature: 165.0,
-        packageTemperature: 250.0,
-        heatSinkTemperature: 95.0,
+        supplyVoltage: 5.43,
+        node1Voltage: 5.43,
+        node2Voltage: 3.20,
+        collectorEmitterCurrent: 0.175,
+        internalTemperature: -2261.5,
+        packageTemperature: 279.5,
+        heatSinkTemperature: 719.2,
       },
       faultWireIndex: 2, // Wire #3
       solderDelamination: false,
     },
     coolingFailure: {
-      name: 'Thermal Dissipation Failure',
+      name: 'Package Temp Drift',
       values: {
-        supplyVoltage: 4.5,
-        node1Voltage: 4.4,
-        node2Voltage: 4.0,
-        collectorEmitterCurrent: 0.12,
-        internalTemperature: 150.0,
-        packageTemperature: 240.0,
-        heatSinkTemperature: 115.0,
+        supplyVoltage: 4.94,
+        node1Voltage: 4.94,
+        node2Voltage: 4.30,
+        collectorEmitterCurrent: 0.102,
+        internalTemperature: -2261.5,
+        packageTemperature: 280.5,
+        heatSinkTemperature: 719.2,
       },
       faultWireIndex: -1,
       solderDelamination: true,
@@ -283,9 +291,12 @@ export const DEMO_DATA = {
 
   totalDuration: 36,
 
+  // Real thresholds from model_registry & burninwatch_expanded_artifacts_v2.json
   thresholds: {
-    isolationForest: 0.35,
-    autoencoder: 0.08,
+    isolationForest: MODEL_THRESHOLDS.response_focused.isolationForest,
+    autoencoder: MODEL_THRESHOLDS.response_focused.autoencoder,
+    maxObservedIF: MODEL_THRESHOLDS.response_focused.maxObservedIF,
+    maxObservedAE: MODEL_THRESHOLDS.response_focused.maxObservedAE,
   },
 
   slidingWindow: {
@@ -295,7 +306,7 @@ export const DEMO_DATA = {
     endWindow: 134,
   },
 
-  // 4 Curated Presentation Scenarios
+  // 4 Curated Presentation Scenarios (rebuilt on real baselines and % deviations)
   scenarios: {
     healthy: {
       id: 'healthy',
@@ -307,51 +318,51 @@ export const DEMO_DATA = {
       coolingDegraded: false,
       sensors: {
         nominal: {
-          supplyVoltage: 15.0,
-          node1Voltage: 12.4,
-          node2Voltage: 10.8,
-          node_voltage_drop: 1.6,
-          collectorEmitterCurrent: 38.5,
-          internalTemperature: 42.1,
-          packageTemperature: 38.4,
-          heatSinkTemperature: 32.0,
+          supplyVoltage: 4.937,
+          node1Voltage: 4.936,
+          node2Voltage: 4.507,
+          node_voltage_drop: 0.429,
+          collectorEmitterCurrent: 0.092,
+          internalTemperature: -2261.5,
+          packageTemperature: 254.4,
+          heatSinkTemperature: 719.2,
         },
         stressed: {
-          supplyVoltage: 15.0,
-          node1Voltage: 12.2,
-          node2Voltage: 10.3,
-          node_voltage_drop: 1.9,
-          collectorEmitterCurrent: 52.0,
-          internalTemperature: 76.0,
-          packageTemperature: 64.0,
-          heatSinkTemperature: 50.0,
+          supplyVoltage: 4.937,
+          node1Voltage: 4.936,
+          node2Voltage: 4.450,
+          node_voltage_drop: 0.486,
+          collectorEmitterCurrent: 0.106, // +15% over baseline
+          internalTemperature: -2261.5,
+          packageTemperature: 262.0,
+          heatSinkTemperature: 719.2,
         },
         final: {
-          supplyVoltage: 15.0,
-          node1Voltage: 12.1,
-          node2Voltage: 10.1,
-          node_voltage_drop: 2.0,
-          collectorEmitterCurrent: 54.0,
-          internalTemperature: 79.5,
-          packageTemperature: 66.8,
-          heatSinkTemperature: 52.4,
+          supplyVoltage: 4.937,
+          node1Voltage: 4.936,
+          node2Voltage: 4.400,
+          node_voltage_drop: 0.536,
+          collectorEmitterCurrent: 0.110, // +20% over baseline
+          internalTemperature: -2261.5,
+          packageTemperature: 264.0,
+          heatSinkTemperature: 719.2,
         },
       },
       models: {
         ifFlagTime: null,
         aeFlagTime: null,
-        ifFinalScore: 0.22, // Well below 0.35
-        aeFinalLoss: 0.045,  // Well below 0.08
+        ifFinalScore: 0.038, // 0.55 * tau_IF (0.0691)
+        aeFinalLoss: 0.120,  // 0.42 * tau_AE (0.2876)
         reviewTime: null,
         anomalyTime: null,
       },
       xai: {
         title: "Quality Verification Passed",
-        leadFeature: "Nominal Conduction & Stable Thermal Gradient",
+        leadFeature: "Nominal Conduction & Stable Operating Envelope",
         lines: [
-          "Δ Package Temp: +8.4 °C (Within ±15% nominal band)",
-          "Node Voltage Drop: 2.0 V (Zero baseline deviation)",
-          "100/25 Screening Result: 100% Windows Confirmed NORMAL",
+          "Δ Package Temp: +9.6 dataset units (Within observed baseline band)",
+          "Collector Current: 0.110 A (Nominal conduction band 0.04–0.20 A)",
+          "Screening Result: 100% Windows Confirmed NORMAL",
         ],
       },
     } as ScenarioConfig,
@@ -359,7 +370,7 @@ export const DEMO_DATA = {
     fatigue: {
       id: 'fatigue',
       name: 'Bond-Wire Fatigue',
-      tagline: 'Micro-crack on emitter wire leading to thermal runaway',
+      tagline: 'Micro-crack on emitter wire leading to current constriction and thermal hotspot',
       description: 'Repeated thermal cycling cracks emitter bond wire #3. Constricted current creates a localized hotspot; Isolation Forest flags first, followed by Autoencoder consensus.',
       hasCrack: true,
       crackedWireIndex: 2,
@@ -367,51 +378,51 @@ export const DEMO_DATA = {
       coolingDegraded: false,
       sensors: {
         nominal: {
-          supplyVoltage: 15.0,
-          node1Voltage: 12.4,
-          node2Voltage: 10.8,
-          node_voltage_drop: 1.6,
-          collectorEmitterCurrent: 38.5,
-          internalTemperature: 42.1,
-          packageTemperature: 38.4,
-          heatSinkTemperature: 32.0,
+          supplyVoltage: 4.937,
+          node1Voltage: 4.936,
+          node2Voltage: 4.507,
+          node_voltage_drop: 0.429,
+          collectorEmitterCurrent: 0.092,
+          internalTemperature: -2261.5,
+          packageTemperature: 254.4,
+          heatSinkTemperature: 719.2,
         },
         stressed: {
-          supplyVoltage: 15.0,
-          node1Voltage: 12.1,
-          node2Voltage: 9.9,
-          node_voltage_drop: 2.2,
-          collectorEmitterCurrent: 55.0,
-          internalTemperature: 88.5,
-          packageTemperature: 74.2,
-          heatSinkTemperature: 58.6,
+          supplyVoltage: 4.940,
+          node1Voltage: 4.930,
+          node2Voltage: 3.900,
+          node_voltage_drop: 1.030,
+          collectorEmitterCurrent: 0.129, // +40% over baseline
+          internalTemperature: -2261.5,
+          packageTemperature: 268.0,
+          heatSinkTemperature: 719.2,
         },
         final: {
-          supplyVoltage: 15.1,
-          node1Voltage: 11.5,
-          node2Voltage: 7.2,
-          node_voltage_drop: 4.3,
-          collectorEmitterCurrent: 68.2,
-          internalTemperature: 148.7,
-          packageTemperature: 112.4,
-          heatSinkTemperature: 82.1,
+          supplyVoltage: 4.950,
+          node1Voltage: 4.930,
+          node2Voltage: 2.650,
+          node_voltage_drop: 2.280,
+          collectorEmitterCurrent: 0.175, // +90% over baseline, within real ~0.04-0.20 A range
+          internalTemperature: -2261.5,
+          packageTemperature: 279.5,
+          heatSinkTemperature: 719.2,
         },
       },
       models: {
         ifFlagTime: 24.5,
         aeFlagTime: 27.0,
-        ifFinalScore: 0.62,
-        aeFinalLoss: 0.28,
+        ifFinalScore: 0.125, // 1.81 * tau_IF (0.0691)
+        aeFinalLoss: 0.850,  // 2.96 * tau_AE (0.2876)
         reviewTime: 24.5,
         anomalyTime: 27.0,
       },
       xai: {
         title: "XAI Root Cause Attribution",
-        leadFeature: "Collector-Emitter Voltage Drop & Junction Hotspot",
+        leadFeature: "Collector Terminal Voltage Drop & Hotspot",
         lines: [
-          "Δ Package Temp: +38.2 °C (+51.5% vs baseline)",
-          "Node Voltage Drop: 4.3 V (Exceeds 3.5σ reference threshold)",
-          "Anomaly Episode #1: Windows 128 – 134 confirmed",
+          "Δ Package Temp: +25.1 dataset units (+9.9% vs baseline)",
+          "Node Voltage Drop: 2.28 V (+431% over nominal baseline 0.43 V)",
+          "Consensus: ANOMALY confirmed across dual screening windows",
         ],
       },
     } as ScenarioConfig,
@@ -426,50 +437,50 @@ export const DEMO_DATA = {
       coolingDegraded: false,
       sensors: {
         nominal: {
-          supplyVoltage: 15.0,
-          node1Voltage: 12.4,
-          node2Voltage: 10.8,
-          node_voltage_drop: 1.6,
-          collectorEmitterCurrent: 38.5,
-          internalTemperature: 42.1,
-          packageTemperature: 38.4,
-          heatSinkTemperature: 32.0,
+          supplyVoltage: 4.937,
+          node1Voltage: 4.936,
+          node2Voltage: 4.507,
+          node_voltage_drop: 0.429,
+          collectorEmitterCurrent: 0.092,
+          internalTemperature: -2261.5,
+          packageTemperature: 254.4,
+          heatSinkTemperature: 719.2,
         },
         stressed: {
-          supplyVoltage: 15.0,
-          node1Voltage: 12.2,
-          node2Voltage: 10.0,
-          node_voltage_drop: 2.2,
-          collectorEmitterCurrent: 48.0,
-          internalTemperature: 68.0,
-          packageTemperature: 58.0,
-          heatSinkTemperature: 44.0,
+          supplyVoltage: 4.940,
+          node1Voltage: 4.930,
+          node2Voltage: 4.100,
+          node_voltage_drop: 0.830,
+          collectorEmitterCurrent: 0.106, // +15% over baseline
+          internalTemperature: -2261.5,
+          packageTemperature: 258.0,
+          heatSinkTemperature: 719.2,
         },
         final: {
-          supplyVoltage: 15.0,
-          node1Voltage: 11.8,
-          node2Voltage: 9.0,
-          node_voltage_drop: 2.8,
-          collectorEmitterCurrent: 51.5,
-          internalTemperature: 74.5,
-          packageTemperature: 64.0,
-          heatSinkTemperature: 48.0,
+          supplyVoltage: 4.940,
+          node1Voltage: 4.930,
+          node2Voltage: 3.750,
+          node_voltage_drop: 1.180,
+          collectorEmitterCurrent: 0.115, // +25% over baseline
+          internalTemperature: -2261.5,
+          packageTemperature: 262.5,
+          heatSinkTemperature: 719.2,
         },
       },
       models: {
         ifFlagTime: 25.0,
-        aeFlagTime: null, // Never flags
-        ifFinalScore: 0.44, // Breaches 0.35
-        aeFinalLoss: 0.062, // Below 0.08
+        aeFlagTime: null,   // Never flags
+        ifFinalScore: 0.088, // 1.27 * tau_IF (0.0691)
+        aeFinalLoss: 0.195,  // 0.68 * tau_AE (0.2876) - below threshold
         reviewTime: 25.0,
         anomalyTime: null,  // Stays REVIEW
       },
       xai: {
         title: "Engineering Review Recommended",
-        leadFeature: "Subtle Node 2 Voltage Contact Resistance Drift",
+        leadFeature: "Terminal Voltage Drop Drift",
         lines: [
-          "Isolation Forest flagged atypical terminal voltage drop",
-          "Autoencoder reconstruction loss: 0.062 (Within 0.08 tolerance)",
+          "Isolation Forest flagged atypical terminal voltage drop (score: 0.088 > 0.069)",
+          "Autoencoder reconstruction loss: 0.195 (Within 0.288 threshold)",
           "Recommended Action: Retest contact torque before deployment",
         ],
       },
@@ -477,58 +488,58 @@ export const DEMO_DATA = {
 
     cooling: {
       id: 'cooling',
-      name: 'Cooling Degradation',
-      tagline: 'Thermal interface grease dry-out / fin blockage',
-      description: 'Thermal resistance spikes between baseplate and heatsink. Heat visibly pools in the module, driving packageTemperature high and triggering dual-model thermal anomaly.',
+      name: 'Package Temperature Drift',
+      tagline: 'Thermal accumulation during extended accelerated burn-in',
+      description: 'Package temperature drifts upward beyond observed normal operating quantiles. Both models flag the correlated thermal-electrical deviation.',
       hasCrack: false,
       hasHotspot: false,
       coolingDegraded: true,
       sensors: {
         nominal: {
-          supplyVoltage: 15.0,
-          node1Voltage: 12.4,
-          node2Voltage: 10.8,
-          node_voltage_drop: 1.6,
-          collectorEmitterCurrent: 38.5,
-          internalTemperature: 42.1,
-          packageTemperature: 38.4,
-          heatSinkTemperature: 32.0,
+          supplyVoltage: 4.937,
+          node1Voltage: 4.936,
+          node2Voltage: 4.507,
+          node_voltage_drop: 0.429,
+          collectorEmitterCurrent: 0.092,
+          internalTemperature: -2261.5,
+          packageTemperature: 254.4,
+          heatSinkTemperature: 719.2,
         },
         stressed: {
-          supplyVoltage: 15.0,
-          node1Voltage: 12.2,
-          node2Voltage: 10.2,
-          node_voltage_drop: 2.0,
-          collectorEmitterCurrent: 46.0,
-          internalTemperature: 98.0,
-          packageTemperature: 92.0,
-          heatSinkTemperature: 78.0,
+          supplyVoltage: 4.940,
+          node1Voltage: 4.930,
+          node2Voltage: 4.400,
+          node_voltage_drop: 0.530,
+          collectorEmitterCurrent: 0.098,
+          internalTemperature: -2261.5,
+          packageTemperature: 272.0,
+          heatSinkTemperature: 719.2,
         },
         final: {
-          supplyVoltage: 15.0,
-          node1Voltage: 11.9,
-          node2Voltage: 9.8,
-          node_voltage_drop: 2.1,
-          collectorEmitterCurrent: 48.0,
-          internalTemperature: 134.0,
-          packageTemperature: 124.0,
-          heatSinkTemperature: 102.0,
+          supplyVoltage: 4.940,
+          node1Voltage: 4.930,
+          node2Voltage: 4.300,
+          node_voltage_drop: 0.630,
+          collectorEmitterCurrent: 0.102,
+          internalTemperature: -2261.5,
+          packageTemperature: 280.5,
+          heatSinkTemperature: 719.2,
         },
       },
       models: {
         ifFlagTime: 24.0,
         aeFlagTime: 26.5,
-        ifFinalScore: 0.58,
-        aeFinalLoss: 0.22,
+        ifFinalScore: 0.110, // 1.59 * tau_IF (0.0691)
+        aeFinalLoss: 0.620,  // 2.16 * tau_AE (0.2876)
         reviewTime: 24.0,
         anomalyTime: 26.5,
       },
       xai: {
-        title: "Thermal Interface Runaway",
-        leadFeature: "Heatsink Thermal Dissipation Bottleneck",
+        title: "Package Temperature Drift",
+        leadFeature: "Package Temperature Accumulation",
         lines: [
-          "Package Temp: 124.0 °C (Exceeds 85 °C burn-in thermal limit)",
-          "Thermal Resistance Ratio: Spiked +112% above nominal",
+          "Package Temp: 280.5 dataset units (Approaches observed p99 limit 280.8)",
+          "Delta from baseline: +26.1 dataset units (+10.3% relative change)",
           "Consensus: ANOMALY confirmed across thermal monitoring windows",
         ],
       },

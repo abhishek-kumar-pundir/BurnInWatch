@@ -11,6 +11,7 @@ __pycache__/
 .pytest_cache/
 *.egg-info/
 .ipynb_checkpoints/
+burninwatch_notebooks_backup.zip
 
 # raw data and large research outputs (not for GitHub)
 /dataset/                       # <- replace with your actual dataset folder name

@@ -64,7 +64,7 @@ def _feature_matrix(seed: int) -> pd.DataFrame:
 
 
 def build_artifacts(directory, names=("response_focused", "expanded")) -> None:
-    """Write small synthetic artifacts in the EXACT format notebook 12 saves (tests only)."""
+    """Write small synthetic artifacts in the EXACT format notebook 05 (formerly 12) saves (tests only)."""
     from sklearn.impute import SimpleImputer
     from sklearn.preprocessing import RobustScaler
 

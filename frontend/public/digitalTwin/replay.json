@@ -9,7 +9,7 @@
     "stride": 25,
     "total_windows": 427,
     "duration_s": 2460.353000164032,
-    "citation": "Trained on NASA IGBT aging data (notebook 12, models/burninwatch_expanded_artifacts_v2.json)"
+    "citation": "Trained on NASA IGBT aging data (notebook 05, models/burninwatch_expanded_artifacts_v2.json)"
   },
   "thresholds": {
     "isolation_forest": 0.06908179599444629,

@@ -167,7 +167,7 @@ def export_replay_data():
             "stride": PIPELINE.stride,
             "total_windows": n_windows,
             "duration_s": float(times[-1] - times[0]),
-            "citation": "Trained on NASA IGBT aging data (notebook 12, models/burninwatch_expanded_artifacts_v2.json)",
+            "citation": "Trained on NASA IGBT aging data (notebook 05, models/burninwatch_expanded_artifacts_v2.json)",
         },
         "thresholds": {
             "isolation_forest": float(res.thresholds.isolation_forest),

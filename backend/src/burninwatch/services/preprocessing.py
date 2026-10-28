@@ -1,6 +1,6 @@
 """Numeric conversion, cleaning, chronological sorting and baseline calculation.
 
-Everything here mirrors notebook 12 (training): rows with a missing value in ANY of the
+Everything here mirrors notebook 05, formerly 12 (training): rows with a missing value in ANY of the
 eight required numeric columns are dropped, ``measurement_valid == False`` rows are
 dropped, and the baseline uses the training rule (see ``PipelineConfig``).
 """
@@ -106,7 +106,7 @@ def clean(frame: pd.DataFrame) -> CleanedData:
 
 
 def baseline_row_counts(n_rows: int) -> tuple[int, int]:
-    """(train_rows, reference_rows) exactly as notebook 12 computes them for a file."""
+    """(train_rows, reference_rows) exactly as notebook 05 (formerly 12) computes them for a file."""
     train_rows = int(np.floor(n_rows * PIPELINE.train_fraction))
     ref_rows = max(PIPELINE.baseline_min_rows, int(train_rows * PIPELINE.baseline_fraction))
     return train_rows, min(ref_rows, n_rows)

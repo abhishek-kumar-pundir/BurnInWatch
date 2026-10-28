@@ -74,7 +74,7 @@ out = {
         "processed/burninwatch_expanded_model_comparison_v2.csv",
         "processed/burninwatch_expanded_overlapping_windows_v2.csv",
         "backend/models/* (thresholds and artifacts)",
-        "12_BurnInWatch_Expanded_Modeling.ipynb (methodology)",
+        "notebooks/05_expanded_overlapping_modeling.ipynb (methodology)",
     ],
     "validation_methodology": (
         "Per file, raw records are split chronologically (no shuffling, split BEFORE windowing so windows never "

@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { clamp, lerp, easeInOutCubic } from '../timeline';
 import { THEME } from '../theme';
 import { setHoveredPart } from '../hoverStore';
+import { DATASET_STATS } from '../data/datasetStats';
 
 // Export bond wire curves for particle flow and crack animation
 export function createBondWireCurves(): THREE.CatmullRomCurve3[] {
@@ -56,6 +57,7 @@ interface IGBTModuleProps {
   faultWireIndex?: number; // -1 for none, 0-4
   solderDelaminated?: boolean;
   hasHotspot?: boolean;
+  packageTemperature?: number; // in dataset units (values ~26 to 281)
   manualTemp?: number;
   onSelectPart?: (partId: string) => void;
   onHoverPart?: (partId: string | null) => void;
@@ -67,6 +69,7 @@ export const IGBTModule: React.FC<IGBTModuleProps> = ({
   faultWireIndex = -1,
   solderDelaminated = false,
   hasHotspot = false,
+  packageTemperature,
   manualTemp,
   onSelectPart,
   onHoverPart,
@@ -77,6 +80,8 @@ export const IGBTModule: React.FC<IGBTModuleProps> = ({
   const casingEdgesRef = useRef<THREE.LineSegments>(null);
   const wireMatRefs = useRef<(THREE.MeshStandardMaterial | null)[]>([]);
   const igbtDieMatRef = useRef<THREE.MeshStandardMaterial>(null);
+  const baseplateMatRef = useRef<THREE.MeshStandardMaterial>(null);
+  const heatsinkMatRef = useRef<THREE.MeshStandardMaterial>(null);
   const hotspotMeshRef = useRef<THREE.Mesh>(null);
   const hotspotMatRef = useRef<THREE.MeshBasicMaterial>(null);
 
@@ -123,29 +128,23 @@ export const IGBTModule: React.FC<IGBTModuleProps> = ({
       }
     }
 
-    // Dynamic Thermal Die Color (Teal -> Amber -> Crimson)
-    if (igbtDieMatRef.current) {
-      let temp = 42.0;
-      if (typeof manualTemp === 'number') {
-        temp = manualTemp;
-      } else {
-        if (currentTime <= 13) {
-          temp = 42.0;
-        } else if (currentTime <= 22) {
-          const t = clamp((currentTime - 13) / 9, 0, 1);
-          temp = lerp(42.0, 88.5, t);
-        } else {
-          const t = clamp((currentTime - 22) / 10, 0, 1);
-          temp = lerp(88.5, 148.7, t);
-        }
-      }
+    // Dynamic Thermal Die & Baseplate Color driven by packageTemperature over real p01-p99 range
+    const p01 = DATASET_STATS.packageTemperature.p01; // ~59.65
+    const p99 = DATASET_STATS.packageTemperature.p99; // ~280.82
+    const pkgTemp = typeof packageTemperature === 'number'
+      ? packageTemperature
+      : typeof manualTemp === 'number'
+      ? manualTemp
+      : DATASET_STATS.packageTemperature.median;
+    const normalizedT = clamp((pkgTemp - p01) / (p99 - p01), 0, 1);
 
-      if (temp <= 50) {
+    if (igbtDieMatRef.current) {
+      if (normalizedT <= 0.70) {
         igbtDieMatRef.current.color.set(THEME.scene.dieNominal);
         igbtDieMatRef.current.emissive.set(THEME.scene.dieNominal);
         igbtDieMatRef.current.emissiveIntensity = 0.25;
-      } else if (temp <= 100) {
-        const t = (temp - 50) / 50;
+      } else if (normalizedT <= 0.90) {
+        const t = (normalizedT - 0.70) / 0.20;
         igbtDieMatRef.current.color.lerpColors(
           new THREE.Color(THEME.scene.dieNominal),
           new THREE.Color(THEME.scene.dieWarm),
@@ -158,7 +157,7 @@ export const IGBTModule: React.FC<IGBTModuleProps> = ({
         );
         igbtDieMatRef.current.emissiveIntensity = 0.25 + t * 0.4;
       } else {
-        const t = clamp((temp - 100) / 50, 0, 1);
+        const t = clamp((normalizedT - 0.90) / 0.10, 0, 1);
         igbtDieMatRef.current.color.lerpColors(
           new THREE.Color(THEME.scene.dieWarm),
           new THREE.Color(THEME.scene.dieHot),
@@ -169,7 +168,7 @@ export const IGBTModule: React.FC<IGBTModuleProps> = ({
           new THREE.Color(THEME.scene.dieHot),
           t
         );
-        igbtDieMatRef.current.emissiveIntensity = 0.65 + t * 0.6;
+        igbtDieMatRef.current.emissiveIntensity = 0.65 + t * 0.55;
       }
 
       if (selectedPartId === 'die_igbt') {
@@ -178,11 +177,39 @@ export const IGBTModule: React.FC<IGBTModuleProps> = ({
       }
     }
 
+    // Baseplate coloration following normalized package temperature
+    if (baseplateMatRef.current) {
+      if (selectedPartId === 'baseplate') {
+        baseplateMatRef.current.emissive.set(THEME.ui.accent);
+        baseplateMatRef.current.emissiveIntensity = 0.35;
+      } else if (normalizedT > 0.70) {
+        baseplateMatRef.current.emissive.set('#b45309');
+        baseplateMatRef.current.emissiveIntensity = (normalizedT - 0.70) * 0.45;
+      } else {
+        baseplateMatRef.current.emissive.set('#000000');
+        baseplateMatRef.current.emissiveIntensity = 0;
+      }
+    }
+
+    // Heatsink glow tied to normalized package temperature (thermal diffusion)
+    if (heatsinkMatRef.current) {
+      if (selectedPartId === 'heatsink') {
+        heatsinkMatRef.current.emissive.set(THEME.ui.accent);
+        heatsinkMatRef.current.emissiveIntensity = 0.35;
+      } else if (normalizedT > 0.75) {
+        heatsinkMatRef.current.emissive.set('#d97706');
+        heatsinkMatRef.current.emissiveIntensity = (normalizedT - 0.75) * 0.35;
+      } else {
+        heatsinkMatRef.current.emissive.set('#000000');
+        heatsinkMatRef.current.emissiveIntensity = 0;
+      }
+    }
+
     // Localized Hotspot bloom on Die Pad 2
     if (hotspotMeshRef.current && hotspotMatRef.current) {
-      const showHotspot = hasHotspot || (typeof manualTemp === 'number' && manualTemp > 120);
+      const showHotspot = hasHotspot || normalizedT > 0.92;
       if (showHotspot) {
-        const pulse = 1.0 + Math.sin(currentTime * 3.0) * 0.15;
+        const pulse = 1.0 + Math.sin(currentTime * 3.5) * 0.15;
         hotspotMeshRef.current.scale.set(pulse, 1, pulse);
         hotspotMatRef.current.opacity = 0.85;
       } else {
@@ -244,6 +271,7 @@ export const IGBTModule: React.FC<IGBTModuleProps> = ({
         <mesh position={[0, 0, 0]}>
           <boxGeometry args={[3.2, 0.10, 2.2]} />
           <meshStandardMaterial
+            ref={heatsinkMatRef}
             color={THEME.scene.heatsinkBase}
             emissive={isSelected('heatsink') ? THEME.ui.accent : '#000000'}
             emissiveIntensity={isSelected('heatsink') ? 0.35 : 0}
@@ -283,6 +311,7 @@ export const IGBTModule: React.FC<IGBTModuleProps> = ({
         <mesh>
           <boxGeometry args={[3.0, 0.08, 2.0]} />
           <meshStandardMaterial
+            ref={baseplateMatRef}
             color={THEME.scene.baseplateCopper}
             emissive={isSelected('baseplate') ? THEME.ui.accent : '#000000'}
             emissiveIntensity={isSelected('baseplate') ? 0.35 : 0}

@@ -68,7 +68,7 @@ Then inspect them (do this first):
 python scripts\inspect_artifacts.py
 ```
 
-Artifact formats (exactly what notebook 12 saves; loaded strictly, nothing is guessed):
+Artifact formats (exactly what notebook 05, formerly 12, saves; loaded strictly, nothing is guessed):
 
 | File | Content |
 |---|---|

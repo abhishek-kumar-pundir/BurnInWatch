@@ -6,6 +6,7 @@ import { ContactShadows } from '@react-three/drei';
 import { StatusPill } from '../components/StatusPill';
 
 import { DEMO_DATA, ScenarioId, SensorValues } from './demoData';
+import { DATASET_STATS } from './data/datasetStats';
 import { THEME } from './theme';
 import {
   StageId,
@@ -201,14 +202,14 @@ export default function DigitalTwinPage() {
   // Manual Lab State
   const [isLabCollapsed, setIsLabCollapsed] = useState(false);
   const [manualSensors, setManualSensors] = useState<SensorValues>({
-    supplyVoltage: 15.0,
-    node1Voltage: 12.4,
-    node2Voltage: 10.8,
-    node_voltage_drop: 1.6,
-    collectorEmitterCurrent: 38.5,
-    internalTemperature: 45.0,
-    packageTemperature: 40.0,
-    heatSinkTemperature: 33.0,
+    supplyVoltage: DATASET_STATS.supplyVoltage.median,
+    node1Voltage: DATASET_STATS.node1Voltage.median,
+    node2Voltage: 4.507,
+    node_voltage_drop: 0.429,
+    collectorEmitterCurrent: DATASET_STATS.collectorEmitterCurrent.median,
+    internalTemperature: DATASET_STATS.internalTemperature.median,
+    packageTemperature: DATASET_STATS.packageTemperature.median,
+    heatSinkTemperature: DATASET_STATS.heatSinkTemperature.median,
   });
   const [manualFaultWire, setManualFaultWire] = useState<number>(-1);
   const [manualDelamination, setManualDelamination] = useState<boolean>(false);
@@ -264,9 +265,8 @@ export default function DigitalTwinPage() {
   const activeTelemetry = isReplay ? replayTelemetry : isManual ? manualResult.telemetry : timelineTelemetry;
 
   // Visual aid constraints for 3D module
-  // In replay mode, the crack/hotspot appears ONLY when consensus === 'ANOMALY'
+  // In replay mode, the crack/hotspot/delamination appears ONLY when consensus === 'ANOMALY'
   const isReplayAnomaly = isReplay && activeTelemetry.consensus === 'ANOMALY';
-  const isReplayReview = isReplay && activeTelemetry.consensus === 'REVIEW';
 
   const activeFaultWire = isReplay
     ? (isReplayAnomaly ? 2 : -1)
@@ -277,7 +277,7 @@ export default function DigitalTwinPage() {
     : -1;
 
   const activeDelamination = isReplay
-    ? (isReplayAnomaly || isReplayReview)
+    ? isReplayAnomaly
     : isManual
     ? manualDelamination
     : activeScenarioConfig.coolingDegraded;
@@ -285,7 +285,7 @@ export default function DigitalTwinPage() {
   const activeHotspot = isReplay
     ? isReplayAnomaly
     : isManual
-    ? manualSensors.internalTemperature > 60
+    ? manualSensors.packageTemperature > 275
     : activeScenarioConfig.hasHotspot && currentTime >= 22.0;
 
   // RAF loop for smooth playback timer
@@ -468,14 +468,14 @@ export default function DigitalTwinPage() {
 
   const handleResetBaseline = useCallback(() => {
     setManualSensors({
-      supplyVoltage: 15.0,
-      node1Voltage: 12.4,
-      node2Voltage: 10.8,
-      node_voltage_drop: 1.6,
-      collectorEmitterCurrent: 38.5,
-      internalTemperature: 45.0,
-      packageTemperature: 40.0,
-      heatSinkTemperature: 33.0,
+      supplyVoltage: DATASET_STATS.supplyVoltage.median,
+      node1Voltage: DATASET_STATS.node1Voltage.median,
+      node2Voltage: 4.507,
+      node_voltage_drop: 0.429,
+      collectorEmitterCurrent: DATASET_STATS.collectorEmitterCurrent.median,
+      internalTemperature: DATASET_STATS.internalTemperature.median,
+      packageTemperature: DATASET_STATS.packageTemperature.median,
+      heatSinkTemperature: DATASET_STATS.heatSinkTemperature.median,
     });
     setManualFaultWire(-1);
     setManualDelamination(false);
@@ -654,7 +654,8 @@ export default function DigitalTwinPage() {
               faultWireIndex={activeFaultWire}
               solderDelaminated={activeDelamination}
               hasHotspot={activeHotspot}
-              manualTemp={isManual || isReplay ? activeSensors.internalTemperature : undefined}
+              packageTemperature={activeSensors.packageTemperature}
+              manualTemp={activeSensors.packageTemperature}
               onSelectPart={(id) => setSelectedPartId(id)}
               selectedPartId={selectedPartId}
             />
@@ -736,7 +737,7 @@ export default function DigitalTwinPage() {
                 { id: 'healthy', label: '1. Nominal', Icon: HealthyScenarioIcon },
                 { id: 'fatigue', label: '2. Wire fatigue', Icon: FatigueScenarioIcon },
                 { id: 'drift', label: '3. Voltage drift', Icon: DriftScenarioIcon },
-                { id: 'cooling', label: '4. Cooling fail', Icon: CoolingFanScenarioIcon },
+                { id: 'cooling', label: '4. Temp drift', Icon: CoolingFanScenarioIcon },
                 { id: 'manual', label: '5. Manual lab', Icon: SlidersIcon },
                 { id: 'replay', label: '6. Real replay', Icon: DatabaseIcon },
               ].map(({ id, label, Icon }) => {
@@ -832,7 +833,7 @@ export default function DigitalTwinPage() {
                     Accelerated life test replay
                   </h1>
                   <p className="text-xs text-slate-600 mt-0.5 leading-normal">
-                    Trained Isolation Forest & Autoencoder screening across 427 sliding windows (sample_burnin_device4_main.csv).
+                    Source: Device 4 accelerated aging run (<code className="font-mono text-[11px] text-slate-800">sample_burnin_device4_main.csv</code>, 427 windows, 10,770 raw measurements).
                   </p>
 
                   {replayDataset && replayDataset.episodes.length > 0 && (

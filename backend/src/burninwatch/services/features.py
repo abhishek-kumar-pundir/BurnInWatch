@@ -1,4 +1,4 @@
-"""Window feature engineering - an exact vectorised port of notebook 12 ``extract_features``.
+"""Window feature engineering - an exact vectorised port of notebook 05 (formerly 12) ``extract_features``.
 
 Computes the *full* feature universe once per upload; each model configuration then selects
 its own ordered subset (artifact feature list). No fitting happens here.

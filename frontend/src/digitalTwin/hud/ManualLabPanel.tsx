@@ -1,7 +1,7 @@
 import React from 'react';
 import { DEMO_DATA, SensorValues } from '../demoData';
-import { THEME } from '../theme';
 import { DerivedMetrics } from '../illustrativeScoring';
+import { DATASET_STATS } from '../data/datasetStats';
 import { SlidersIcon, AlertTriangleIcon, ReplayIcon, SparklesIcon } from '../icons';
 
 interface ManualLabPanelProps {
@@ -31,8 +31,6 @@ export const ManualLabPanel: React.FC<ManualLabPanelProps> = ({
   isCollapsed,
   onToggleCollapse,
 }) => {
-  const { baselineStats } = DEMO_DATA;
-
   if (isCollapsed) {
     return (
       <button
@@ -46,7 +44,7 @@ export const ManualLabPanel: React.FC<ManualLabPanelProps> = ({
   }
 
   return (
-    <div className="pointer-events-auto w-80 rounded-md border p-3.5 shadow-sm bg-white border-slate-200 flex flex-col gap-3 max-h-[calc(100vh-140px)] overflow-y-auto">
+    <div className="pointer-events-auto w-84 rounded-md border p-3.5 shadow-sm bg-white border-slate-200 flex flex-col gap-3 max-h-[calc(100vh-140px)] overflow-y-auto">
       {/* Header */}
       <div className="flex items-center justify-between pb-2 border-b border-slate-200">
         <div className="flex items-center gap-2">
@@ -99,29 +97,29 @@ export const ManualLabPanel: React.FC<ManualLabPanelProps> = ({
             onClick={() => onApplyPreset('coolingFailure')}
             className="py-1 px-2 rounded border text-xs font-medium bg-slate-50 hover:bg-slate-100 transition-colors text-slate-800 border-slate-200 text-center"
           >
-            Cooling fail
+            Temp Drift
           </button>
         </div>
       </div>
 
-      {/* Sliders for Primary Signals */}
+      {/* Sliders for Primary Signals (Active Model Inputs) */}
       <div className="space-y-2.5">
         <div className="text-xs font-medium text-slate-500">
-          Telemetry sliders
+          Model-Monitored Telemetry Sliders
         </div>
 
         {/* collectorEmitterCurrent */}
         <div>
           <div className="flex justify-between text-xs mb-1">
-            <span className="text-slate-600">Collector current</span>
+            <span className="text-slate-600">Collector current (ICE)</span>
             <span className="font-semibold tabular-nums text-slate-900">
               {sensors.collectorEmitterCurrent.toFixed(3)} A
             </span>
           </div>
           <input
             type="range"
-            min={baselineStats.collectorEmitterCurrent.min}
-            max={baselineStats.collectorEmitterCurrent.max}
+            min={0.02}
+            max={0.35}
             step={0.005}
             value={sensors.collectorEmitterCurrent}
             onChange={(e) =>
@@ -129,51 +127,25 @@ export const ManualLabPanel: React.FC<ManualLabPanelProps> = ({
             }
             className="w-full accent-slate-700 cursor-pointer"
           />
-        </div>
-
-        {/* internalTemperature */}
-        <div>
-          <div className="flex justify-between text-xs mb-1">
-            <span className="text-slate-600">Junction temp</span>
-            <span
-              className="font-semibold tabular-nums"
-              style={{
-                color:
-                  sensors.internalTemperature > 110
-                    ? THEME.status.anomaly.solid
-                    : sensors.internalTemperature > 75
-                    ? THEME.status.review.solid
-                    : THEME.ui.ink,
-              }}
-            >
-              {sensors.internalTemperature.toFixed(1)} °C
-            </span>
+          <div className="flex justify-between text-[10px] text-slate-400">
+            <span>p01: {DATASET_STATS.collectorEmitterCurrent.p01} A</span>
+            <span>median: {DATASET_STATS.collectorEmitterCurrent.median} A</span>
+            <span>p99: {DATASET_STATS.collectorEmitterCurrent.p99} A</span>
           </div>
-          <input
-            type="range"
-            min={baselineStats.internalTemperature.min}
-            max={baselineStats.internalTemperature.max}
-            step={1}
-            value={sensors.internalTemperature}
-            onChange={(e) =>
-              onUpdateSensor('internalTemperature', parseFloat(e.target.value))
-            }
-            className="w-full accent-slate-700 cursor-pointer"
-          />
         </div>
 
         {/* packageTemperature */}
         <div>
           <div className="flex justify-between text-xs mb-1">
-            <span className="text-slate-600">Package temp</span>
+            <span className="text-slate-600">Package temperature</span>
             <span className="font-semibold tabular-nums text-slate-900">
-              {sensors.packageTemperature.toFixed(1)} °C
+              {sensors.packageTemperature.toFixed(1)} {DATASET_STATS.packageTemperature.unitLabel}
             </span>
           </div>
           <input
             type="range"
-            min={baselineStats.packageTemperature.min}
-            max={baselineStats.packageTemperature.max}
+            min={30}
+            max={300}
             step={1}
             value={sensors.packageTemperature}
             onChange={(e) =>
@@ -181,27 +153,11 @@ export const ManualLabPanel: React.FC<ManualLabPanelProps> = ({
             }
             className="w-full accent-slate-700 cursor-pointer"
           />
-        </div>
-
-        {/* heatSinkTemperature */}
-        <div>
-          <div className="flex justify-between text-xs mb-1">
-            <span className="text-slate-600">Heatsink temp</span>
-            <span className="font-semibold tabular-nums text-slate-900">
-              {sensors.heatSinkTemperature.toFixed(1)} °C
-            </span>
+          <div className="flex justify-between text-[10px] text-slate-400">
+            <span>p01: {DATASET_STATS.packageTemperature.p01.toFixed(0)}</span>
+            <span>median: {DATASET_STATS.packageTemperature.median.toFixed(0)}</span>
+            <span>p99: {DATASET_STATS.packageTemperature.p99.toFixed(0)}</span>
           </div>
-          <input
-            type="range"
-            min={baselineStats.heatSinkTemperature.min}
-            max={baselineStats.heatSinkTemperature.max}
-            step={1}
-            value={sensors.heatSinkTemperature}
-            onChange={(e) =>
-              onUpdateSensor('heatSinkTemperature', parseFloat(e.target.value))
-            }
-            className="w-full accent-slate-700 cursor-pointer"
-          />
         </div>
 
         {/* node1Voltage & node2Voltage */}
@@ -209,13 +165,13 @@ export const ManualLabPanel: React.FC<ManualLabPanelProps> = ({
           <div>
             <div className="flex justify-between text-xs mb-0.5">
               <span className="text-slate-600">Node 1</span>
-              <span className="font-semibold tabular-nums">{sensors.node1Voltage.toFixed(1)} V</span>
+              <span className="font-semibold tabular-nums">{sensors.node1Voltage.toFixed(2)} V</span>
             </div>
             <input
               type="range"
-              min={baselineStats.node1Voltage.min}
-              max={baselineStats.node1Voltage.max}
-              step={0.1}
+              min={2.0}
+              max={6.2}
+              step={0.05}
               value={sensors.node1Voltage}
               onChange={(e) =>
                 onUpdateSensor('node1Voltage', parseFloat(e.target.value))
@@ -226,13 +182,13 @@ export const ManualLabPanel: React.FC<ManualLabPanelProps> = ({
           <div>
             <div className="flex justify-between text-xs mb-0.5">
               <span className="text-slate-600">Node 2</span>
-              <span className="font-semibold tabular-nums">{sensors.node2Voltage.toFixed(1)} V</span>
+              <span className="font-semibold tabular-nums">{sensors.node2Voltage.toFixed(2)} V</span>
             </div>
             <input
               type="range"
-              min={baselineStats.node2Voltage.min}
-              max={baselineStats.node2Voltage.max}
-              step={0.1}
+              min={1.5}
+              max={6.0}
+              step={0.05}
               value={sensors.node2Voltage}
               onChange={(e) =>
                 onUpdateSensor('node2Voltage', parseFloat(e.target.value))
@@ -240,6 +196,41 @@ export const ManualLabPanel: React.FC<ManualLabPanelProps> = ({
               className="w-full accent-slate-700 cursor-pointer"
             />
           </div>
+        </div>
+
+        {/* supplyVoltage */}
+        <div>
+          <div className="flex justify-between text-xs mb-0.5">
+            <span className="text-slate-600">Supply voltage</span>
+            <span className="font-semibold tabular-nums">{sensors.supplyVoltage.toFixed(2)} V</span>
+          </div>
+          <input
+            type="range"
+            min={2.0}
+            max={6.5}
+            step={0.05}
+            value={sensors.supplyVoltage}
+            onChange={(e) =>
+              onUpdateSensor('supplyVoltage', parseFloat(e.target.value))
+            }
+            className="w-full accent-slate-700 cursor-pointer"
+          />
+        </div>
+      </div>
+
+      {/* Uncalibrated Signals: Read-only info card */}
+      <div className="p-2.5 rounded bg-slate-50 border border-slate-200 text-xs space-y-1">
+        <div className="font-semibold text-slate-700">Uncalibrated Sensors (Read-only)</div>
+        <div className="flex justify-between text-slate-600">
+          <span>Heat sink sensor:</span>
+          <span className="font-mono tabular-nums">{sensors.heatSinkTemperature.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between text-slate-600">
+          <span>Internal sensor:</span>
+          <span className="font-mono tabular-nums">{sensors.internalTemperature.toFixed(2)}</span>
+        </div>
+        <div className="text-[10px] text-slate-400 mt-1 italic">
+          Not used by the models (raw ADC counts, no physical calibration recorded).
         </div>
       </div>
 
@@ -297,7 +288,7 @@ export const ManualLabPanel: React.FC<ManualLabPanelProps> = ({
       {/* Live Derived Physical Metrics */}
       <div className="p-2.5 rounded bg-slate-50 border border-slate-200 space-y-1.5 text-xs">
         <div className="text-xs font-semibold text-slate-700 mb-1">
-          Derived diagnostic metrics
+          Derived engineering features
         </div>
         <div className="flex justify-between">
           <span className="text-slate-600">Voltage drop (ΔV):</span>
@@ -308,13 +299,7 @@ export const ManualLabPanel: React.FC<ManualLabPanelProps> = ({
         <div className="flex justify-between">
           <span className="text-slate-600">Power proxy:</span>
           <span className="font-semibold tabular-nums text-slate-900">
-            {derived.power_proxy.toFixed(1)} W
-          </span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-slate-600">Thermal resistance:</span>
-          <span className="font-semibold tabular-nums text-slate-900">
-            {derived.thermal_resistance_ratio.toFixed(3)} °C/W
+            {derived.power_proxy.toFixed(3)} W
           </span>
         </div>
       </div>

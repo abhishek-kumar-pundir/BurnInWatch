@@ -41,7 +41,7 @@ from .repository import ScreeningDetail, ScreeningRepository
 _DEVICE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._\-]{0,63}$")
 _STATUS_RANK = {ScreeningStatus.NORMAL: 0, ScreeningStatus.REVIEW: 1, ScreeningStatus.ANOMALY: 2}
 BASELINE_METHOD = (
-    "Training rule (notebook 12): median of node2Voltage, collectorEmitterCurrent and packageTemperature over the "
+    "Training rule (notebook 05, formerly 12): median of node2Voltage, collectorEmitterCurrent and packageTemperature over the "
     "first max(20, 10 % of the first 20 % of rows) cleaned rows of THIS upload."
 )
 

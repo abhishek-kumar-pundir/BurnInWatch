@@ -2,7 +2,7 @@
 
 Uses the research outputs shipped with the project:
   * a raw upload-format CSV of one test (default: processed/sample_burnin_device4_main.csv = Device_4 main)
-  * processed/burninwatch_expanded_overlapping_windows_v2.csv - notebook 12's own windows, features and scores
+  * processed/burninwatch_expanded_overlapping_windows_v2.csv - notebook 05's (formerly 12) own windows, features and scores
 
     python scripts/verify_parity.py [--raw ...] [--windows ...] [--device Device_4] [--file "Device4  1.mat"]
 

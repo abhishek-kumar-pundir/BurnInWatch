@@ -1,6 +1,6 @@
 """Model registry: known model configurations + lazy, cached artifact loading.
 
-Artifact formats (written by notebook 12; loaded STRICTLY - nothing is guessed):
+Artifact formats (written by notebook 05, formerly 12; loaded STRICTLY - nothing is guessed):
 
 ``burninwatch_expanded_<name>_IF.joblib``
     dict ``{imputer: SimpleImputer, scaler: RobustScaler, model: IsolationForest,

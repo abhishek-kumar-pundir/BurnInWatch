@@ -57,7 +57,7 @@ BASELINE_SIGNALS: tuple[str, ...] = (
 
 
 class PipelineConfig:
-    """Fixed by notebook 12 (BurnInWatch_Expanded_Modeling) - NOT configurable.
+    """Fixed by notebook 05 (05_expanded_overlapping_modeling.ipynb, formerly notebook 12) - NOT configurable.
 
     Baseline rule used in training, per file: ``train_n = floor(0.20 * n)`` rows form the
     baseline-train segment; the reference region is its first

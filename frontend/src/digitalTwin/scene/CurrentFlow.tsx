@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { createBondWireCurves } from './IGBTModule';
 import { clamp } from '../timeline';
 import { THEME } from '../theme';
+import { DATASET_STATS } from '../data/datasetStats';
 
 interface CurrentFlowProps {
   currentTime: number;
@@ -50,8 +51,14 @@ export const CurrentFlow: React.FC<CurrentFlowProps> = ({
       return;
     }
 
-    const currentVal = typeof manualCurrent === 'number' ? manualCurrent : 55.0;
-    const baseSpeed = (currentVal / 40.0) * 0.45;
+    // Single source of truth baseline current (A)
+    const baselineMedianCurrent = DATASET_STATS.collectorEmitterCurrent.median; // ~0.0918 A
+    const currentVal = typeof manualCurrent === 'number' ? manualCurrent : baselineMedianCurrent;
+
+    // speed = clamp(current / baselineMedianCurrent, min, max) * base constant
+    // Real observed current is ~0.04 A to 0.20 A
+    const speedMultiplier = clamp(currentVal / baselineMedianCurrent, 0.35, 3.0);
+    const baseSpeed = speedMultiplier * 0.45;
 
     let index = 0;
     curves.forEach((curve, wireIdx) => {
@@ -79,17 +86,16 @@ export const CurrentFlow: React.FC<CurrentFlowProps> = ({
 
         const point = curve.getPoint(t);
         dummy.position.copy(point);
-        // Slightly larger radius (0.045) for crisp visibility on light background
         dummy.scale.setScalar(scale * 0.045);
         dummy.updateMatrix();
 
         instancedMeshRef.current!.setMatrixAt(index, dummy.matrix);
 
-        // Color coding with normal blending
+        // Color coding based on real current overstress (> 0.13 A)
         if (isCrackedWire) {
           colorHelper.set(THEME.scene.particleFault);
-        } else if (currentVal > 50) {
-          const warmT = clamp((currentVal - 50) / 25, 0, 1);
+        } else if (currentVal > 0.13) {
+          const warmT = clamp((currentVal - 0.13) / 0.07, 0, 1);
           colorHelper.lerpColors(
             new THREE.Color(THEME.scene.particleNormal),
             new THREE.Color(THEME.scene.particleWarning),
@@ -114,9 +120,9 @@ export const CurrentFlow: React.FC<CurrentFlowProps> = ({
     <instancedMesh
       ref={instancedMeshRef}
       args={[undefined, undefined, totalParticles]}
+      frustumCulled={false}
     >
       <sphereGeometry args={[1, 10, 10]} />
-      {/* Normal blending with saturated colors for light theme */}
       <meshBasicMaterial toneMapped={false} />
     </instancedMesh>
   );

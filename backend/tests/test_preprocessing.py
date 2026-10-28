@@ -25,7 +25,7 @@ def test_clean_drops_invalid_rows_and_counts(frame):
 
 
 def test_any_required_column_nan_drops_row_like_training(frame):
-    """Notebook 12 used dropna over all 8 numeric columns, so heatSink/internal NaN rows are dropped too."""
+    """Notebook 05 (formerly 12) used dropna over all 8 numeric columns, so heatSink/internal NaN rows are dropped too."""
     f = frame.copy()
     f.loc[5, "internalTemperature"] = np.nan
     c = pp.clean(f)

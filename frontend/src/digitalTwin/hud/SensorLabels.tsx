@@ -1,6 +1,7 @@
 import React from 'react';
 import { SensorValues } from '../demoData';
 import { THEME } from '../theme';
+import { DATASET_STATS } from '../data/datasetStats';
 
 interface SensorLabelsProps {
   stageId: number;
@@ -21,7 +22,7 @@ export const SensorLabels: React.FC<SensorLabelsProps> = ({
   return (
     <div className="pointer-events-auto">
       <div
-        className="rounded-md p-3 border shadow-sm max-w-sm w-80 bg-white"
+        className="rounded-md p-3 border shadow-sm max-w-sm w-84 bg-white"
         style={{
           borderColor: THEME.ui.border,
         }}
@@ -36,73 +37,47 @@ export const SensorLabels: React.FC<SensorLabelsProps> = ({
         </div>
 
         <div className="grid grid-cols-2 gap-2 text-xs">
-          {/* Internal Temperature */}
-          <div className="flex justify-between items-center py-1.5 px-2 rounded bg-slate-50 border border-slate-200">
-            <span className="text-slate-600">Junction temp</span>
-            <span
-              className="font-semibold tabular-nums"
-              style={{
-                color:
-                  sensorValues.internalTemperature > 110
-                    ? THEME.status.anomaly.solid
-                    : sensorValues.internalTemperature > 75
-                    ? THEME.status.review.solid
-                    : THEME.status.normal.solid,
-              }}
-            >
-              {sensorValues.internalTemperature.toFixed(1)}°C
-            </span>
-          </div>
-
           {/* Package Temperature */}
-          <div className="flex justify-between items-center py-1.5 px-2 rounded bg-slate-50 border border-slate-200">
-            <span className="text-slate-600">Package temp</span>
-            <span
-              className="font-semibold tabular-nums"
-              style={{
-                color:
-                  sensorValues.packageTemperature > 90
-                    ? THEME.status.anomaly.solid
-                    : sensorValues.packageTemperature > 60
-                    ? THEME.status.review.solid
-                    : THEME.status.normal.solid,
-              }}
-            >
-              {sensorValues.packageTemperature.toFixed(1)}°C
-            </span>
-          </div>
-
-          {/* Heatsink Temperature */}
-          <div className="flex justify-between items-center py-1.5 px-2 rounded bg-slate-50 border border-slate-200">
-            <span className="text-slate-600">Heatsink temp</span>
-            <span
-              className="font-semibold tabular-nums"
-              style={{
-                color:
-                  sensorValues.heatSinkTemperature > 80
-                    ? THEME.status.anomaly.solid
-                    : THEME.ui.ink,
-              }}
-            >
-              {sensorValues.heatSinkTemperature.toFixed(1)}°C
+          <div
+            className="flex flex-col py-1.5 px-2 rounded bg-slate-50 border border-slate-200 col-span-2"
+            title="Color shows package temperature relative to the observed range"
+          >
+            <div className="flex justify-between items-center">
+              <span className="text-slate-700 font-medium">Package temperature</span>
+              <span
+                className="font-semibold tabular-nums"
+                style={{
+                  color:
+                    sensorValues.packageTemperature > 275
+                      ? THEME.status.anomaly.solid
+                      : sensorValues.packageTemperature > 265
+                      ? THEME.status.review.solid
+                      : THEME.status.normal.solid,
+                }}
+              >
+                {sensorValues.packageTemperature.toFixed(1)} {DATASET_STATS.packageTemperature.unitLabel}
+              </span>
+            </div>
+            <span className="text-[10px] text-slate-500 mt-0.5">
+              Observed dataset range: 26.96 – 281.80
             </span>
           </div>
 
           {/* ICE Current */}
-          <div className="flex justify-between items-center py-1.5 px-2 rounded bg-slate-50 border border-slate-200">
-            <span className="text-slate-600">ICE current</span>
+          <div className="flex justify-between items-center py-1.5 px-2 rounded bg-slate-50 border border-slate-200 col-span-2">
+            <span className="text-slate-600">Collector current (ICE)</span>
             <span
               className="font-semibold tabular-nums"
               style={{
                 color:
-                  sensorValues.collectorEmitterCurrent > 60
+                  sensorValues.collectorEmitterCurrent > 0.16
                     ? THEME.status.anomaly.solid
-                    : sensorValues.collectorEmitterCurrent > 50
+                    : sensorValues.collectorEmitterCurrent > 0.12
                     ? THEME.status.review.solid
                     : THEME.status.normal.solid,
               }}
             >
-              {sensorValues.collectorEmitterCurrent.toFixed(1)} A
+              {sensorValues.collectorEmitterCurrent.toFixed(3)} A
             </span>
           </div>
 
@@ -129,14 +104,29 @@ export const SensorLabels: React.FC<SensorLabelsProps> = ({
               className="font-semibold tabular-nums"
               style={{
                 color:
-                  sensorValues.node_voltage_drop > 3.0
+                  sensorValues.node_voltage_drop > 1.8
                     ? THEME.status.anomaly.solid
-                    : sensorValues.node_voltage_drop > 2.2
+                    : sensorValues.node_voltage_drop > 0.8
                     ? THEME.status.review.solid
                     : THEME.status.normal.solid,
               }}
             >
               {sensorValues.node_voltage_drop.toFixed(2)} V
+            </span>
+          </div>
+
+          {/* Internal & Heatsink Temperature: Uncalibrated read-only */}
+          <div className="col-span-2 pt-1 border-t border-slate-100 flex flex-col gap-1 text-[11px] text-slate-500">
+            <div className="flex justify-between">
+              <span>Heat sink sensor:</span>
+              <span className="tabular-nums font-mono">{sensorValues.heatSinkTemperature.toFixed(2)} (raw ADC)</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Internal sensor:</span>
+              <span className="tabular-nums font-mono">{sensorValues.internalTemperature.toFixed(2)} (raw ADC)</span>
+            </div>
+            <span className="text-[10px] text-slate-400 italic">
+              Note: Uncalibrated sensor units; not used by the ML screening models.
             </span>
           </div>
         </div>
