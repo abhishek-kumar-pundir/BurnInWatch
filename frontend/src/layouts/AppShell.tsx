@@ -80,11 +80,12 @@ export function AppShell() {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
   const items = useNav();
+  const isDigitalTwin = pathname === "/digital-twin";
 
   useEffect(() => setOpen(false), [pathname]);
 
   return (
-    <div className="flex min-h-full">
+    <div className={cn("flex", isDigitalTwin ? "h-screen overflow-hidden" : "min-h-full")}>
       <aside className="hidden w-56 shrink-0 flex-col bg-nav lg:flex">
         <Brand />
         <NavList items={items} />
@@ -109,17 +110,26 @@ export function AppShell() {
       ) : null}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex h-12 items-center justify-between gap-3 border-b border-line bg-surface/95 px-4 backdrop-blur">
-          <div className="flex items-center gap-2">
-            <button type="button" aria-label="Open navigation" className="rounded p-1.5 text-ink-muted hover:bg-canvas lg:hidden" onClick={() => setOpen(true)}>
-              <Menu className="size-5" aria-hidden />
-            </button>
-            <span className="text-[13px] font-semibold text-ink">{pageTitle(pathname)}</span>
-          </div>
-          <StatusPill />
-        </header>
-        <main className="bw-fade-in mx-auto w-full max-w-[1280px] flex-1 px-4 py-6 sm:px-6" key={pathname}>
-          <Outlet />
+        {!isDigitalTwin && (
+          <header className="sticky top-0 z-20 flex h-12 items-center justify-between gap-3 border-b border-line bg-surface/95 px-4 backdrop-blur">
+            <div className="flex items-center gap-2">
+              <button type="button" aria-label="Open navigation" className="rounded p-1.5 text-ink-muted hover:bg-canvas lg:hidden" onClick={() => setOpen(true)}>
+                <Menu className="size-5" aria-hidden />
+              </button>
+              <span className="text-[13px] font-semibold text-ink">{pageTitle(pathname)}</span>
+            </div>
+            <StatusPill />
+          </header>
+        )}
+        <main
+          className={cn(
+            isDigitalTwin
+              ? "flex-1 flex flex-col min-h-0 overflow-hidden relative"
+              : "bw-fade-in mx-auto w-full max-w-[1280px] flex-1 px-4 py-6 sm:px-6"
+          )}
+          key={pathname}
+        >
+          <Outlet context={{ onOpenNav: () => setOpen(true) }} />
         </main>
       </div>
     </div>

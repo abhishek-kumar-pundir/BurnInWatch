@@ -20,14 +20,6 @@ export default function App() {
     <ErrorBoundary>
       <BackendStatusProvider>
         <Routes>
-          <Route
-            path="digital-twin"
-            element={
-              <Suspense fallback={<LoadingState label="Initializing 3D Digital Twin…" height={400} />}>
-                <DigitalTwinPage />
-              </Suspense>
-            }
-          />
           <Route element={<AppShell />}>
             <Route index element={<OverviewPage />} />
             <Route path="screenings/new" element={<NewScreeningPage />} />
@@ -41,6 +33,14 @@ export default function App() {
               }
             />
             <Route path="performance" element={<ModelPerformancePage />} />
+            <Route
+              path="digital-twin"
+              element={
+                <Suspense fallback={<LoadingState label="Initializing 3D Digital Twin…" height={400} />}>
+                  <DigitalTwinPage />
+                </Suspense>
+              }
+            />
             <Route path="system" element={<SystemPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>

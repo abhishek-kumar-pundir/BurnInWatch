@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { useOutletContext } from 'react-router-dom';
+import { Menu } from 'lucide-react';
 import { Canvas } from '@react-three/fiber';
 import { ContactShadows } from '@react-three/drei';
+import { StatusPill } from '../components/StatusPill';
 
 import { DEMO_DATA, ScenarioId, SensorValues } from './demoData';
 import { THEME } from './theme';
@@ -40,7 +42,6 @@ import {
   ResetViewIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  ArrowLeftIcon,
   SparklesIcon,
   SlidersIcon,
   HealthyScenarioIcon,
@@ -114,6 +115,7 @@ class CanvasErrorBoundary extends React.Component<
 
 export default function DigitalTwinPage() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const outletContext = useOutletContext<{ onOpenNav?: () => void } | null>();
 
   // Scenario Selection (healthy | fatigue | drift | cooling | manual | replay)
   const [activeScenarioId, setActiveScenarioId] = useState<ScenarioId>('fatigue');
@@ -171,7 +173,6 @@ export default function DigitalTwinPage() {
   }, [replayDataset, currentReplayWindow]);
 
   // Presentation Playback State
-  const [hasStarted, setHasStarted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [showHud, setShowHud] = useState(true);
@@ -373,7 +374,6 @@ export default function DigitalTwinPage() {
 
   // Playback transport actions
   const togglePlay = useCallback(() => {
-    setHasStarted(true);
     setIsPlaying((prev) => {
       if (!prev) {
         if (isReplay && replayDataset && replayWindowIndex >= replayDataset.windows.length - 1) {
@@ -429,15 +429,12 @@ export default function DigitalTwinPage() {
       setIsUserInteracting(false);
       if (id === 'manual') {
         setIsPlaying(false);
-        setHasStarted(true);
       } else if (id === 'replay') {
         handleScrubReplayWindow(0);
         setIsPlaying(true);
-        setHasStarted(true);
       } else {
         setCurrentTime(0);
         setIsPlaying(true);
-        setHasStarted(true);
       }
     },
     [handleScrubReplayWindow]
@@ -569,7 +566,7 @@ export default function DigitalTwinPage() {
   return (
     <div
       ref={containerRef}
-      className="relative w-screen h-screen overflow-hidden font-sans select-none bg-slate-100"
+      className="relative w-full h-full overflow-hidden font-sans select-none bg-slate-100"
       style={{ color: THEME.ui.ink }}
     >
       {/* ============================================================== */}
@@ -690,7 +687,7 @@ export default function DigitalTwinPage() {
       {/* ============================================================== */}
       {showHud && (
         <div
-          className="pointer-events-none fixed inset-0 z-20 grid h-full w-full"
+          className="pointer-events-none absolute inset-0 z-20 grid h-full w-full"
           style={{
             gridTemplateRows: '48px 1fr auto',
             gridTemplateColumns: isBelow1100 ? '1fr' : '1fr 360px',
@@ -712,23 +709,23 @@ export default function DigitalTwinPage() {
             style={{ gridArea: 'top' }}
             className="pointer-events-auto flex items-center justify-between px-4 sm:px-6 h-12 bg-white border-b border-slate-200 shadow-xs z-30"
           >
-            <div className="flex items-center gap-3">
-              <Link
-                to="/"
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium border border-slate-200 text-slate-700 bg-slate-50 hover:bg-slate-100 transition-colors"
-              >
-                <ArrowLeftIcon size={14} />
-                Overview
-              </Link>
-
-              <div className="h-4 w-px bg-slate-200" />
-
+            <div className="flex items-center gap-2.5">
+              {outletContext?.onOpenNav && (
+                <button
+                  type="button"
+                  aria-label="Open navigation"
+                  className="rounded p-1 text-slate-600 hover:bg-slate-100 lg:hidden"
+                  onClick={outletContext.onOpenNav}
+                >
+                  <Menu className="size-5" aria-hidden />
+                </button>
+              )}
               <div className="flex items-center gap-2">
                 <span className="flex size-6 items-center justify-center rounded bg-slate-100 text-slate-700 border border-slate-200">
                   <SparklesIcon size={14} />
                 </span>
                 <span className="text-sm font-semibold text-slate-900 tracking-tight">
-                  BurnInWatch — Component screening twin
+                  3D Digital Twin
                 </span>
               </div>
             </div>
@@ -807,6 +804,9 @@ export default function DigitalTwinPage() {
                   {isDrawerOpen ? 'Close panel' : 'Detection panel'}
                 </button>
               )}
+
+              <div className="h-4 w-px bg-slate-200" />
+              <StatusPill />
             </div>
           </header>
 
@@ -1279,41 +1279,7 @@ export default function DigitalTwinPage() {
       {/* ============================================================== */}
       <CursorTooltip />
 
-      {/* ============================================================== */}
-      {/* 4. INITIAL PRESENTATION START DIALOG                           */}
-      {/* ============================================================== */}
-      {!hasStarted && !isManual && !isReplay && (
-        <div className="absolute inset-0 z-40 flex items-center justify-center bg-slate-900/30 backdrop-blur-xs">
-          <div className="border border-slate-200 rounded-lg p-6 max-w-md text-center shadow-lg bg-white">
-            <div
-              className="size-12 rounded-md flex items-center justify-center mx-auto mb-3 border border-slate-200"
-              style={{
-                backgroundColor: THEME.ui.accentSoft,
-                color: THEME.ui.accentStrong,
-              }}
-            >
-              <SparklesIcon size={24} />
-            </div>
-            <h2 className="text-lg font-semibold tracking-tight mb-1 text-slate-900">
-              IGBT burn-in screening simulation
-            </h2>
-            <p className="text-xs mb-5 text-slate-600 leading-normal">
-              Physics-based accelerated life test model with real-time multi-sensor telemetry and dual-model anomaly detection.
-            </p>
-            <button
-              onClick={togglePlay}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium text-sm shadow-xs transition-colors text-white"
-              style={{ backgroundColor: THEME.ui.accent }}
-            >
-              <PlayIcon size={16} />
-              Start simulation (Space)
-            </button>
-            <p className="mt-3 text-[11px] text-slate-500">
-              Press Space anytime to pause. Click components in 3D to inspect failure modes.
-            </p>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }
